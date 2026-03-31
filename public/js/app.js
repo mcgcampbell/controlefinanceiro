@@ -1,7 +1,4 @@
-const BRL = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL'
-});
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const defaultData = {
   monthlyIncome: 6500,
@@ -15,6 +12,8 @@ const defaultData = {
   insuranceCoverage: 0
 };
 
+const state = { entries: [] };
+
 const fields = {
   monthlyIncome: document.getElementById('monthlyIncome'),
   extraIncome: document.getElementById('extraIncome'),
@@ -24,7 +23,10 @@ const fields = {
   investments: document.getElementById('investments'),
   emergencyReserve: document.getElementById('emergencyReserve'),
   hasInsurance: document.getElementById('hasInsurance'),
-  insuranceCoverage: document.getElementById('insuranceCoverage')
+  insuranceCoverage: document.getElementById('insuranceCoverage'),
+  entryType: document.getElementById('entryType'),
+  entryDescription: document.getElementById('entryDescription'),
+  entryAmount: document.getElementById('entryAmount')
 };
 
 const ui = {
@@ -40,12 +42,18 @@ const ui = {
   insightsList: document.getElementById('insightsList'),
   protectionCard: document.getElementById('protectionCard'),
   protectionMessage: document.getElementById('protectionMessage'),
-  protectionCta: document.getElementById('protectionCta')
+  protectionCta: document.getElementById('protectionCta'),
+  entriesList: document.getElementById('entriesList'),
+  projectionShort: document.getElementById('projectionShort'),
+  projectionMedium: document.getElementById('projectionMedium'),
+  projectionLong: document.getElementById('projectionLong'),
+  projectionNarrative: document.getElementById('projectionNarrative'),
+  addEntryBtn: document.getElementById('addEntryBtn'),
+  tabButtons: document.querySelectorAll('.tab-btn'),
+  tabPanels: document.querySelectorAll('.tab-panel')
 };
 
-function numberValue(input) {
-  return Number(input.value) || 0;
-}
+const numberValue = (input) => Number(input.value) || 0;
 
 function getFormData() {
   return {
@@ -73,12 +81,8 @@ function calculateMetrics(data) {
 }
 
 function healthStatus(metrics) {
-  if (metrics.monthlyBalance < 0 || metrics.emergencyMonths < 1) {
-    return { label: 'Crítica', className: 'status status--danger' };
-  }
-  if (metrics.savingsRate < 10 || metrics.emergencyMonths < 3) {
-    return { label: 'Atenção', className: 'status status--warning' };
-  }
+  if (metrics.monthlyBalance < 0 || metrics.emergencyMonths < 1) return { label: 'Crítica', className: 'status status--danger' };
+  if (metrics.savingsRate < 10 || metrics.emergencyMonths < 3) return { label: 'Atenção', className: 'status status--warning' };
   return { label: 'Saudável', className: 'status status--success' };
 }
 
@@ -88,21 +92,16 @@ function buildInsights(data, metrics) {
   const fixedCostRate = (data.fixedCosts / totalIncome) * 100;
 
   if (fixedCostRate > 50) insights.push('Seu custo fixo está alto para sua renda atual.');
-
   insights.push(`Sua reserva cobre ${metrics.emergencyMonths.toFixed(1)} meses de despesas essenciais.`);
+  insights.push(metrics.monthlyBalance < 0 ? 'Suas saídas estão acima das entradas neste momento.' : 'Você mantém saldo mensal positivo, o que ajuda no planejamento.');
 
-  if (metrics.monthlyBalance < 0) {
-    insights.push('Suas saídas estão acima das entradas neste momento.');
-  } else {
-    insights.push('Você mantém saldo mensal positivo, o que ajuda no planejamento.');
-  }
+  if (data.hasInsurance === 'no') insights.push('Existe dependência da sua renda ativa para manter seu padrão atual.');
+  else if (data.insuranceCoverage < data.monthlyIncome * 12) insights.push('Sua proteção financeira pode estar incompleta para seu padrão de renda.');
+  else insights.push('Você possui uma base de proteção alinhada ao planejamento atual.');
 
-  if (data.hasInsurance === 'no') {
-    insights.push('Existe dependência da sua renda ativa para manter seu padrão atual.');
-  } else if (data.insuranceCoverage < data.monthlyIncome * 12) {
-    insights.push('Sua proteção financeira pode estar incompleta para seu padrão de renda.');
-  } else {
-    insights.push('Você possui uma base de proteção alinhada ao planejamento atual.');
+  if (state.entries.length > 0) {
+    const entriesNet = state.entries.reduce((acc, item) => acc + (item.type === 'income' ? item.amount : -item.amount), 0);
+    insights.push(entriesNet >= 0 ? 'Suas movimentações registradas reforçam tendência positiva de caixa.' : 'Suas movimentações recentes pedem ajuste para preservar saldo futuro.');
   }
 
   return insights;
@@ -120,6 +119,42 @@ function renderProtection(data) {
   }
 }
 
+function renderEntryList() {
+  if (state.entries.length === 0) {
+    ui.entriesList.innerHTML = '<li class="empty">Nenhuma movimentação adicionada ainda.</li>';
+    return;
+  }
+
+  ui.entriesList.innerHTML = state.entries
+    .map((item) => `
+      <li class="entry-item">
+        <div>
+          <strong>${item.description}</strong>
+          <small>${item.type === 'income' ? 'Entrada' : 'Saída'} recorrente mensal</small>
+        </div>
+        <strong class="${item.type}">${item.type === 'income' ? '+' : '-'} ${BRL.format(item.amount)}</strong>
+      </li>
+    `)
+    .join('');
+}
+
+function renderProjection(metrics, data) {
+  const entriesNet = state.entries.reduce((acc, item) => acc + (item.type === 'income' ? item.amount : -item.amount), 0);
+  const baseMonthly = metrics.monthlyBalance + entriesNet;
+
+  const short = data.emergencyReserve + baseMonthly * 3;
+  const medium = data.emergencyReserve + baseMonthly * 12;
+  const long = data.emergencyReserve + baseMonthly * 36;
+
+  ui.projectionShort.textContent = BRL.format(short);
+  ui.projectionMedium.textContent = BRL.format(medium);
+  ui.projectionLong.textContent = BRL.format(long);
+
+  if (baseMonthly > 0) ui.projectionNarrative.textContent = 'Com o ritmo atual, há tendência de crescimento da sua margem financeira nos três horizontes.';
+  else if (baseMonthly === 0) ui.projectionNarrative.textContent = 'No cenário atual, sua evolução tende a estabilidade. Pequenos ajustes podem melhorar o resultado.';
+  else ui.projectionNarrative.textContent = 'No cenário atual, a tendência é de redução da reserva ao longo do tempo; vale revisar prioridades.';
+}
+
 function render() {
   const data = getFormData();
   const metrics = calculateMetrics(data);
@@ -131,47 +166,79 @@ function render() {
   ui.monthlyBalance.textContent = BRL.format(metrics.monthlyBalance);
   ui.savingsRate.textContent = `${metrics.savingsRate.toFixed(1)}%`;
   ui.emergencyMonths.textContent = metrics.emergencyMonths.toFixed(1);
-
   ui.healthIndicator.className = health.className;
   ui.healthIndicator.textContent = health.label;
-
   ui.insightsList.innerHTML = insights.map((insight) => `<li>${insight}</li>`).join('');
 
   renderProtection(data);
+  renderEntryList();
+  renderProjection(metrics, data);
 }
 
 function setupInsuranceField() {
-  const hasInsurance = fields.hasInsurance.value;
-  const shouldShowCoverage = hasInsurance === 'yes';
-  ui.coverageField.classList.toggle('hidden', !shouldShowCoverage);
+  ui.coverageField.classList.toggle('hidden', fields.hasInsurance.value !== 'yes');
+}
+
+function addEntry() {
+  const description = fields.entryDescription.value.trim();
+  const amount = numberValue(fields.entryAmount);
+  const type = fields.entryType.value;
+
+  if (!description || amount <= 0) {
+    alert('Informe descrição e valor maior que zero para adicionar a movimentação.');
+    return;
+  }
+
+  state.entries.unshift({ description, amount, type });
+  fields.entryDescription.value = '';
+  fields.entryAmount.value = '';
+  render();
+}
+
+function setupTabs() {
+  ui.tabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      ui.tabButtons.forEach((btn) => btn.classList.remove('active'));
+      button.classList.add('active');
+      const target = button.dataset.tab;
+      ui.tabPanels.forEach((panel) => panel.classList.toggle('active', panel.id === target));
+    });
+  });
 }
 
 async function init() {
-  Object.entries(defaultData).forEach(([key, value]) => {
-    fields[key].value = value;
-  });
-
-  // Simula pequena latência para exibir loading state do MVP.
+  Object.entries(defaultData).forEach(([key, value]) => { if (fields[key]) fields[key].value = value; });
   await fetch('/api/config');
 
   ui.loadingState.classList.add('hidden');
   ui.appContent.classList.remove('hidden');
 
+  setupTabs();
   setupInsuranceField();
   render();
 
-  Object.values(fields).forEach((field) => {
+  [
+    fields.monthlyIncome,
+    fields.extraIncome,
+    fields.fixedCosts,
+    fields.variableCosts,
+    fields.debts,
+    fields.investments,
+    fields.emergencyReserve,
+    fields.hasInsurance,
+    fields.insuranceCoverage
+  ].forEach((field) => {
     field.addEventListener('input', () => {
       setupInsuranceField();
       render();
     });
-
     field.addEventListener('change', () => {
       setupInsuranceField();
       render();
     });
   });
 
+  ui.addEntryBtn.addEventListener('click', addEntry);
   ui.protectionCta.addEventListener('click', () => {
     alert('Podemos explorar estratégias de proteção adequadas ao seu momento, com foco educativo e sem compromisso.');
   });

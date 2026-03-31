@@ -12,12 +12,14 @@
   </head>
   <body>
     <header class="hero">
+      <div class="hero__glow hero__glow--one"></div>
+      <div class="hero__glow hero__glow--two"></div>
       <div class="container hero__content">
         <p class="badge">Planejamento financeiro pessoal</p>
-        <h1>Mais clareza para seu dinheiro. Mais segurança para seus planos.</h1>
+        <h1>Organização financeira com estética premium e visão de proteção.</h1>
         <p class="hero__subtitle">
-          Um painel simples para entender sua vida financeira em minutos — com
-          visão prática de organização, reserva e proteção.
+          Comece em segundos, acompanhe seus indicadores e entenda impactos no
+          curto, médio e longo prazo sem complexidade.
         </p>
         <a class="btn btn--primary" href="#app">Começar agora</a>
       </div>
@@ -25,129 +27,132 @@
 
     <main>
       <section class="benefits container" aria-label="Benefícios da ferramenta">
-        <article class="card">
-          <h2>Simples para começar</h2>
-          <p>Preencha poucos campos e veja indicadores em tempo real.</p>
+        <article class="card glass">
+          <h2>Interface moderna</h2>
+          <p>Visual inspirado em apps premium: leve, intuitivo e elegante.</p>
         </article>
-        <article class="card">
-          <h2>Didática e visual</h2>
-          <p>Entenda sua saúde financeira sem termos técnicos complexos.</p>
+        <article class="card glass">
+          <h2>Decisões com clareza</h2>
+          <p>Veja seus números principais e receba orientações objetivas.</p>
         </article>
-        <article class="card">
-          <h2>Clareza com proteção</h2>
-          <p>Conecte organização financeira com uma base de proteção pessoal.</p>
+        <article class="card glass">
+          <h2>Planejamento + proteção</h2>
+          <p>Entenda a importância de continuidade financeira sem pressão.</p>
         </article>
       </section>
 
       <section id="app" class="app container" aria-label="Aplicativo de controle financeiro">
         <div class="app__header">
-          <h2>Painel financeiro essencial</h2>
-          <p>Preencha seus dados e acompanhe os resultados imediatamente.</p>
+          <h2>Painel Financeiro Essencial</h2>
+          <p>MVP sem login para validar usabilidade e geração de valor imediato.</p>
         </div>
 
         <div id="loadingState" class="loading" role="status" aria-live="polite">
-          Carregando configuração inicial...
+          Carregando experiência...
         </div>
 
-        <div id="appContent" class="app__grid hidden">
-          <form id="financeForm" class="card form" novalidate>
-            <h3>Seus dados mensais</h3>
+        <div id="appContent" class="hidden">
+          <nav class="tabs" aria-label="Navegação de funcionalidades">
+            <button class="tab-btn active" data-tab="tabOverview" type="button">Visão Geral</button>
+            <button class="tab-btn" data-tab="tabEntries" type="button">Entradas & Saídas</button>
+          </nav>
 
-            <label>
-              Renda mensal
-              <input type="number" id="monthlyIncome" min="0" step="0.01" />
-            </label>
+          <section id="tabOverview" class="tab-panel active">
+            <div class="app__grid">
+              <form id="financeForm" class="card form glass" novalidate>
+                <h3>Dados financeiros base</h3>
 
-            <label>
-              Outras entradas
-              <input type="number" id="extraIncome" min="0" step="0.01" />
-            </label>
+                <label>Renda mensal <input type="number" id="monthlyIncome" min="0" step="0.01" /></label>
+                <label>Outras entradas <input type="number" id="extraIncome" min="0" step="0.01" /></label>
+                <label>Custos fixos <input type="number" id="fixedCosts" min="0" step="0.01" /></label>
+                <label>Custos variáveis <input type="number" id="variableCosts" min="0" step="0.01" /></label>
+                <label>Dívidas (mensal) <input type="number" id="debts" min="0" step="0.01" /></label>
+                <label>Investimentos (mensal) <input type="number" id="investments" min="0" step="0.01" /></label>
+                <label>Reserva de emergência <input type="number" id="emergencyReserve" min="0" step="0.01" /></label>
 
-            <label>
-              Custos fixos
-              <input type="number" id="fixedCosts" min="0" step="0.01" />
-            </label>
+                <label>
+                  Possui seguro de vida?
+                  <select id="hasInsurance">
+                    <option value="no">Não</option>
+                    <option value="yes">Sim</option>
+                  </select>
+                </label>
 
-            <label>
-              Custos variáveis
-              <input type="number" id="variableCosts" min="0" step="0.01" />
-            </label>
+                <label id="coverageField" class="hidden">Cobertura atual (R$) <input type="number" id="insuranceCoverage" min="0" step="0.01" /></label>
+                <p class="small">Estrutura pronta para incluir Modo Avançado em próxima versão.</p>
+              </form>
 
-            <label>
-              Dívidas (parcelas mensais)
-              <input type="number" id="debts" min="0" step="0.01" />
-            </label>
+              <section class="results">
+                <div class="metrics">
+                  <article class="card metric"><h3>Saldo mensal</h3><p id="monthlyBalance">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total de entradas</h3><p id="totalIncome">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total de saídas</h3><p id="totalExpenses">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Taxa de poupança</h3><p id="savingsRate">0%</p></article>
+                  <article class="card metric"><h3>Meses de reserva</h3><p id="emergencyMonths">0,0</p></article>
+                  <article class="card metric"><h3>Saúde financeira</h3><p id="healthIndicator" class="status status--neutral">Neutra</p></article>
+                </div>
 
-            <label>
-              Investimentos mensais
-              <input type="number" id="investments" min="0" step="0.01" />
-            </label>
+                <article class="card glass">
+                  <h3>Insights automáticos</h3>
+                  <ul id="insightsList" class="insights">
+                    <li>Preencha seus dados para receber recomendações personalizadas.</li>
+                  </ul>
+                </article>
 
-            <label>
-              Reserva de emergência atual
-              <input type="number" id="emergencyReserve" min="0" step="0.01" />
-            </label>
-
-            <label>
-              Possui seguro de vida?
-              <select id="hasInsurance">
-                <option value="no">Não</option>
-                <option value="yes">Sim</option>
-              </select>
-            </label>
-
-            <label id="coverageField" class="hidden">
-              Cobertura atual (R$)
-              <input type="number" id="insuranceCoverage" min="0" step="0.01" />
-            </label>
-
-            <p class="small">Modo avançado já previsto para evolução futura.</p>
-          </form>
-
-          <section class="results">
-            <div class="metrics">
-              <article class="card metric">
-                <h3>Saldo mensal</h3>
-                <p id="monthlyBalance">R$ 0,00</p>
-              </article>
-              <article class="card metric">
-                <h3>Total de entradas</h3>
-                <p id="totalIncome">R$ 0,00</p>
-              </article>
-              <article class="card metric">
-                <h3>Total de saídas</h3>
-                <p id="totalExpenses">R$ 0,00</p>
-              </article>
-              <article class="card metric">
-                <h3>Taxa de poupança</h3>
-                <p id="savingsRate">0%</p>
-              </article>
-              <article class="card metric">
-                <h3>Meses de reserva</h3>
-                <p id="emergencyMonths">0,0</p>
-              </article>
-              <article class="card metric">
-                <h3>Saúde financeira</h3>
-                <p id="healthIndicator" class="status status--neutral">Neutra</p>
-              </article>
+                <article id="protectionCard" class="card protection glass">
+                  <h3>Base de proteção financeira</h3>
+                  <p id="protectionMessage">Informe se possui seguro para conectar proteção ao seu planejamento.</p>
+                  <button type="button" id="protectionCta" class="btn btn--secondary hidden">Entender minha proteção</button>
+                </article>
+              </section>
             </div>
+          </section>
 
-            <article class="card">
-              <h3>Insights automáticos</h3>
-              <ul id="insightsList" class="insights">
-                <li>Preencha seus dados para receber recomendações personalizadas.</li>
-              </ul>
-            </article>
+          <section id="tabEntries" class="tab-panel">
+            <div class="app__grid">
+              <article class="card glass form">
+                <h3>Registrar movimentação</h3>
+                <label>
+                  Tipo
+                  <select id="entryType">
+                    <option value="income">Entrada</option>
+                    <option value="expense">Saída</option>
+                  </select>
+                </label>
+                <label>Descrição <input type="text" id="entryDescription" placeholder="Ex.: Freelancer, mercado, transporte" /></label>
+                <label>Valor (R$) <input type="number" id="entryAmount" min="0" step="0.01" /></label>
+                <button id="addEntryBtn" type="button" class="btn btn--primary btn--full">Adicionar</button>
+                <p class="small">Use esta aba para simular decisões e visualizar impacto projetado.</p>
+              </article>
 
-            <article id="protectionCard" class="card protection">
-              <h3>Base de proteção financeira</h3>
-              <p id="protectionMessage">
-                Informe se possui seguro para conectar proteção ao seu planejamento.
-              </p>
-              <button type="button" id="protectionCta" class="btn btn--secondary hidden">
-                Entender minha proteção
-              </button>
-            </article>
+              <section class="results">
+                <article class="card glass">
+                  <h3>Movimentações lançadas</h3>
+                  <ul id="entriesList" class="entries-list">
+                    <li class="empty">Nenhuma movimentação adicionada ainda.</li>
+                  </ul>
+                </article>
+
+                <article class="card glass">
+                  <h3>Impacto por horizonte</h3>
+                  <div class="projection-grid">
+                    <div class="projection-card">
+                      <p>Curto prazo (3 meses)</p>
+                      <strong id="projectionShort">R$ 0,00</strong>
+                    </div>
+                    <div class="projection-card">
+                      <p>Médio prazo (12 meses)</p>
+                      <strong id="projectionMedium">R$ 0,00</strong>
+                    </div>
+                    <div class="projection-card">
+                      <p>Longo prazo (36 meses)</p>
+                      <strong id="projectionLong">R$ 0,00</strong>
+                    </div>
+                  </div>
+                  <p id="projectionNarrative" class="small">Adicione entradas e saídas para visualizar tendências de evolução.</p>
+                </article>
+              </section>
+            </div>
           </section>
         </div>
       </section>
