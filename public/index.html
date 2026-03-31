@@ -27,8 +27,7 @@
 
         <div class="steps">
           <button class="step active" data-step="1">1. Hábitos</button>
-          <button class="step" data-step="2">2. Renda e custos</button>
-          <button class="step" data-step="3">3. Família e proteção</button>
+          <button class="step" data-step="2">2. Renda, custos, família e proteção</button>
         </div>
 
         <div id="step1" class="step-panel active">
@@ -58,13 +57,17 @@
           <label>Custos variáveis mensais<input id="qVariable" class="money-input" type="text" inputmode="numeric" /></label>
           <p class="micro">Custos variáveis: mercado, transporte, lazer, compras eventuais.</p>
           <p class="micro">Se educação já está nos custos fixos, não repita em “custos escolares”.</p>
-        </div>
-
-        <div id="step3" class="step-panel">
+        
           <label>Dependentes<input id="qDependents" type="number" min="0" step="1" /></label>
           <label id="qSchoolWrap" class="hidden">Custos escolares mensais (obrigatório se houver dependentes)<input id="qSchool" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Reserva atual<input id="qReserve" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Você possui seguro?<select id="qHasInsurance"><option value="no">Não</option><option value="yes">Sim</option><option value="dontknow">Não sei</option></select></label>
+          <div id="habitDetailFields" class="hidden">
+            <label>Detalhe fixo: moradia<input id="qFixedHousing" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe fixo: saúde/seguros<input id="qFixedHealth" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe variável: alimentação<input id="qVarFood" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe variável: lazer<input id="qVarLeisure" class="money-input" type="text" inputmode="numeric" /></label>
+          </div>
         </div>
 
         <div class="wizard-actions">
@@ -90,9 +93,9 @@
 
           <div class="metrics">
             <article class="metric"><h4>Saldo livre</h4><p id="mBalance">R$ 0,00</p></article>
-            <article class="metric has-tip"><h4>Reserva (meses)</h4><p id="mReserveMonths">0,0</p><div class="tip">Passe o mouse para ver o que sua reserva consegue cobrir em emergências reais.</div></article>
+            <article class="metric has-tip"><h4>Reserva (meses)</h4><p id="mReserveMonths">0,0</p><div class="tip">Passe o mouse para ver emergências que sua reserva cobre hoje.<ul id="tipReserveList" class="tip-list"></ul></div></article>
             <article class="metric"><h4>Comprometimento</h4><p id="mCommitment">0%</p></article>
-            <article class="metric has-tip"><h4>Risco de ruína</h4><p id="mRuin">Baixo</p><div class="tip">Se você ficar 1–3 meses sem renda, este indicador mostra quão pressionado seu orçamento fica.</div></article>
+            <article class="metric has-tip"><h4>Risco de ruína</h4><p id="mRuin">Baixo</p><div class="tip">Passe o mouse para ver riscos de ruína e eventos críticos para seu perfil.<ul id="tipRuinList" class="tip-list"></ul></div></article>
           </div>
 
           <div class="bars">
@@ -104,11 +107,6 @@
             <h4>O que fazer agora (3 prioridades)</h4>
             <ol id="priorityList"></ol>
           </article>
-          <article class="card inner">
-            <h4>Emergências cotidianas: custo médio e cobertura da sua reserva</h4>
-            <ul id="emergencyExamples" class="sheet-list"></ul>
-            <p class="micro">Fontes exibidas ao lado de cada item. Valores são referências educativas e podem variar por região e período.</p>
-          </article>
 
         </section>
 
@@ -118,6 +116,12 @@
           <label>Outras receitas<input id="otherIncome" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Custos fixos<input id="fixedCosts" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Custos variáveis<input id="variableCosts" class="money-input" type="text" inputmode="numeric" /></label>
+          <div id="advancedCostFields" class="hidden">
+            <label>Detalhe fixo: moradia<input id="fixedHousing" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe fixo: saúde/seguros<input id="fixedHealth" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe variável: alimentação<input id="varFood" class="money-input" type="text" inputmode="numeric" /></label>
+            <label>Detalhe variável: lazer<input id="varLeisure" class="money-input" type="text" inputmode="numeric" /></label>
+          </div>
           <label>Dívidas mensais<input id="debts" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Custo mensal com seguro<input id="insuranceCost" class="money-input" type="text" inputmode="numeric" /></label>
           <label>Aporte mensal<input id="investments" class="money-input" type="text" inputmode="numeric" /></label>

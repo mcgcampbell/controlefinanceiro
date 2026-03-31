@@ -22,7 +22,7 @@ const ui = {
   onboarding: el('onboarding'),
   panel: el('panel'),
   steps: [...document.querySelectorAll('.step')],
-  stepPanels: [el('step1'), el('step2'), el('step3')],
+  stepPanels: [el('step1'), el('step2')],
   prevStep: el('prevStep'),
   nextStep: el('nextStep'),
   finishOnboarding: el('finishOnboarding'),
@@ -38,6 +38,11 @@ const ui = {
   qVariable: el('qVariable'),
   qReserve: el('qReserve'),
   qHasInsurance: el('qHasInsurance'),
+  habitDetailFields: el('habitDetailFields'),
+  qFixedHousing: el('qFixedHousing'),
+  qFixedHealth: el('qFixedHealth'),
+  qVarFood: el('qVarFood'),
+  qVarLeisure: el('qVarLeisure'),
   profileResult: el('profileResult'),
   onboardingSummary: el('onboardingSummary'),
   toggleMethodology: el('toggleMethodology'),
@@ -46,6 +51,11 @@ const ui = {
   fixedCosts: el('fixedCosts'),
   otherIncome: el('otherIncome'),
   variableCosts: el('variableCosts'),
+  advancedCostFields: el('advancedCostFields'),
+  fixedHousing: el('fixedHousing'),
+  fixedHealth: el('fixedHealth'),
+  varFood: el('varFood'),
+  varLeisure: el('varLeisure'),
   debts: el('debts'),
   insuranceCost: el('insuranceCost'),
   investments: el('investments'),
@@ -82,7 +92,8 @@ const ui = {
   listInvest: el('listInvest'),
   listProtection: el('listProtection'),
   cutSuggestions: el('cutSuggestions'),
-  emergencyExamples: el('emergencyExamples')
+  tipReserveList: el('tipReserveList'),
+  tipRuinList: el('tipRuinList')
 };
 
 const moneyInputs = [...document.querySelectorAll('.money-input')];
@@ -107,15 +118,16 @@ function updateFollowup() {
   ui.qNever.classList.toggle('hidden', v !== 'never');
   ui.qSometimes.classList.toggle('hidden', v !== 'sometimes');
   ui.qOften.classList.toggle('hidden', v !== 'often');
+  ui.habitDetailFields.classList.toggle('hidden', !(v === 'sometimes' || v === 'often'));
 }
 
 function goToStep(step) {
-  state.step = Math.max(1, Math.min(3, step));
+  state.step = Math.max(1, Math.min(2, step));
   ui.steps.forEach((s, i) => s.classList.toggle('active', i + 1 === state.step));
   ui.stepPanels.forEach((p, i) => p.classList.toggle('active', i + 1 === state.step));
   ui.prevStep.classList.toggle('hidden', state.step === 1);
-  ui.nextStep.classList.toggle('hidden', state.step === 3);
-  ui.finishOnboarding.classList.toggle('hidden', state.step !== 3);
+  ui.nextStep.classList.toggle('hidden', state.step === 2);
+  ui.finishOnboarding.classList.toggle('hidden', state.step !== 2);
 }
 
 function getData() {
@@ -133,13 +145,21 @@ function getData() {
     hasInsurance: ui.hasInsurance.value,
     covAbs: parseMoney(ui.coverageAbsence),
     covDis: parseMoney(ui.coverageDisability),
-    covCrit: parseMoney(ui.coverageCritical)
+    covCrit: parseMoney(ui.coverageCritical),
+    fixedHousing: parseMoney(ui.fixedHousing),
+    fixedHealth: parseMoney(ui.fixedHealth),
+    varFood: parseMoney(ui.varFood),
+    varLeisure: parseMoney(ui.varLeisure)
   };
 }
 
 function calculate(data) {
   const totalIncome = data.income + data.otherIncome;
-  const essential = data.fixed + data.variable + data.debts + data.school + data.insuranceCost;
+  const detailedFixed = data.fixedHousing + data.fixedHealth;
+  const detailedVariable = data.varFood + data.varLeisure;
+  const fixedValue = detailedFixed > 0 ? detailedFixed : data.fixed;
+  const variableValue = detailedVariable > 0 ? detailedVariable : data.variable;
+  const essential = fixedValue + variableValue + data.debts + data.school + data.insuranceCost;
   const balance = totalIncome - essential - data.investments;
   const reserveMonths = essential > 0 ? data.reserve / essential : 0;
   const commitment = totalIncome > 0 ? (essential / totalIncome) * 100 : 0;
@@ -177,9 +197,10 @@ function renderInsurance(data, calc) {
 
 function priorities(calc, data) {
   const list = [];
+  const maturity = state.maturity || 'Iniciante';
   list.push(`Seu custo essencial consome ${calc.commitment.toFixed(1)}% da renda; acima de 60% reduz margem de segurança.`);
-  if (calc.reserveMonths < 3) list.push('Reforçar reserva de emergência para pelo menos 3 meses de custo essencial.');
-  else list.push('Manter consistência de reserva e revisar custos variáveis mensalmente.');
+  if (calc.reserveMonths < 3) list.push(maturity === 'Avançado' ? 'Ajuste alocação tática para elevar liquidez imediata sem desmontar estratégia.' : 'Monte reserva para 3 a 6 meses antes de novos compromissos.');
+  else list.push(maturity === 'Iniciante' ? 'Mantenha disciplina mensal para não perder a reserva construída.' : 'Use sua margem para acelerar metas sem elevar seu risco.');
   if (data.hasInsurance !== 'yes') list.push('Estruturar proteção mínima por cobertura (ausência, invalidez e doenças graves).');
   else list.push('Comparar coberturas atuais com referências por renda e ajustar gaps críticos.');
   return list.slice(0, 3);
@@ -272,7 +293,7 @@ function renderDetailedView(data, calc){
     moneyLine('Entradas lançadas', incomeExtra)
   ].join('');
   ui.listEssential.innerHTML = [
-    moneyLine('Fixos', data.fixed), moneyLine('Variáveis', data.variable), moneyLine('Escolares', data.school), moneyLine('Essenciais lançadas', essentialExtra)
+    moneyLine('Fixos', (data.fixedHousing+data.fixedHealth)||data.fixed), moneyLine('Variáveis', (data.varFood+data.varLeisure)||data.variable), moneyLine('Escolares', data.school), moneyLine('Essenciais lançadas', essentialExtra)
   ].join('');
   ui.listDiscretionary.innerHTML = [moneyLine('Supérfluos lançados', discretionaryTotal)].join('');
   ui.listInvest.innerHTML = [moneyLine('Aporte base', data.investments), moneyLine('Aportes lançados', investExtra)].join('');
@@ -288,11 +309,22 @@ function renderDetailedView(data, calc){
 
 
 function renderEmergencyCoverage(data){
+  const profile = state.maturity || 'Iniciante';
   const reserve = data.reserve;
-  ui.emergencyExamples.innerHTML = EMERGENCY_REFERENCES.map((ref) => {
-    const covered = reserve >= ref.cost;
-    return `<li><span>${ref.item} — ${covered ? 'cobre' : 'não cobre'} com sua reserva atual</span><strong>${BRL.format(ref.cost)} <a href="${ref.url}" target="_blank" rel="noreferrer">fonte</a></strong></li>`;
-  }).join('');
+  const base = profile === 'Avançado'
+    ? [
+      { item:'Internação particular (diária UTI)', cost:1330.66, src:'Unimed PTU A500', url:'https://s3.amazonaws.com/us.inevent.files.general/570e0a5dd72282bb4d5729f2cf33ee4157d6aa0b.pdf' },
+      { item:'Adaptação residencial p/ invalidez', cost:15000, src:'Referência de mercado', url:'https://www.caixa.gov.br/' },
+      { item:'Cirurgia de urgência particular', cost:25000, src:'Referência hospitalar', url:'https://www.gov.br/saude/' }
+    ]
+    : [
+      { item:'Troca de óleo + filtro', cost:325, src:'Seu Carro Usado', url:'https://seucarrousado.com.br/revisao-de-carro-usado-quanto-custa-e-o-que-verificar-em-2025' },
+      { item:'Correia dentada + mão de obra', cost:1800, src:'Seu Carro Usado', url:'https://seucarrousado.com.br/revisao-de-carro-usado-quanto-custa-e-o-que-verificar-em-2025' },
+      { item:'Diária UTI SUS', cost:650, src:'Ministério da Saúde', url:'https://www.gov.br/saude/pt-br/assuntos/noticias/2022/janeiro/ministerio-da-saude-aumenta-valor-para-custeio-de-utis' }
+    ];
+
+  ui.tipReserveList.innerHTML = base.map((e)=>`<li>${e.item}: ${reserve>=e.cost?'cobre':'não cobre'} (${BRL.format(e.cost)}) <a href="${e.url}" target="_blank" rel="noreferrer">fonte</a></li>`).join('');
+  ui.tipRuinList.innerHTML = base.map((e)=>`<li>${e.item}: impacto ${((e.cost/Math.max(reserve,1))*100).toFixed(0)}% da sua reserva.</li>`).join('');
 }
 
 function renderDashboard() {
@@ -339,8 +371,18 @@ function seedFromOnboarding() {
   ui.hasInsurance.value = ui.qHasInsurance.value;
 
   const maturityMap = { never: 'Iniciante', sometimes: 'Moderado', often: 'Avançado', dontknow: 'Em diagnóstico' };
-  ui.profileResult.textContent = `Perfil identificado: ${maturityMap[ui.qTrack.value]}.`;
-  ui.onboardingSummary.textContent = `Com base no que você respondeu, sua situação hoje é: ${maturityMap[ui.qTrack.value]} em maturidade financeira.`;
+  state.maturity = maturityMap[ui.qTrack.value];
+  ui.profileResult.textContent = `Perfil identificado: ${state.maturity}.`;
+  ui.onboardingSummary.textContent = `Com base no que você respondeu, sua situação hoje é: ${state.maturity} em maturidade financeira.`;
+  if (ui.qTrack.value === 'sometimes' || ui.qTrack.value === 'often') {
+    setMoney(ui.fixedHousing, parseMoney(ui.qFixedHousing));
+    setMoney(ui.fixedHealth, parseMoney(ui.qFixedHealth));
+    setMoney(ui.varFood, parseMoney(ui.qVarFood));
+    setMoney(ui.varLeisure, parseMoney(ui.qVarLeisure));
+    ui.advancedCostFields.classList.remove('hidden');
+  } else {
+    ui.advancedCostFields.classList.add('hidden');
+  }
   return true;
 }
 
@@ -360,7 +402,7 @@ function initOnboarding() {
 }
 
 function initPanel() {
-  [ui.monthlyIncome, ui.otherIncome, ui.fixedCosts, ui.variableCosts, ui.debts, ui.insuranceCost, ui.investments, ui.emergencyReserve, ui.schoolCosts, ui.coverageAbsence, ui.coverageDisability, ui.coverageCritical, ui.entryAmount].forEach((i) => i.addEventListener('input', () => state.onboarded && renderDashboard()));
+  [ui.monthlyIncome, ui.otherIncome, ui.fixedCosts, ui.variableCosts, ui.debts, ui.insuranceCost, ui.investments, ui.emergencyReserve, ui.schoolCosts, ui.coverageAbsence, ui.coverageDisability, ui.coverageCritical, ui.fixedHousing, ui.fixedHealth, ui.varFood, ui.varLeisure, ui.entryAmount].forEach((i) => i.addEventListener('input', () => state.onboarded && renderDashboard()));
   [ui.dependentsCount, ui.hasInsurance].forEach((i) => i.addEventListener('change', () => state.onboarded && renderDashboard()));
 
   ui.toggleMethodology.onclick = () => ui.methodology.classList.toggle('hidden');
@@ -391,9 +433,9 @@ function initPanel() {
 async function init() {
   await fetch('/api/config');
   bindMoneyMasks();
-  setMoney(ui.qIncome, 0); setMoney(ui.qFixed, 0); setMoney(ui.qVariable, 0); setMoney(ui.qSchool, 0); setMoney(ui.qReserve, 0);
+  setMoney(ui.qIncome, 0); setMoney(ui.qFixed, 0); setMoney(ui.qVariable, 0); setMoney(ui.qSchool, 0); setMoney(ui.qReserve, 0); setMoney(ui.qFixedHousing,0); setMoney(ui.qFixedHealth,0); setMoney(ui.qVarFood,0); setMoney(ui.qVarLeisure,0);
   setMoney(ui.monthlyIncome, 0); setMoney(ui.otherIncome, 0); setMoney(ui.fixedCosts, 0); setMoney(ui.variableCosts, 0); setMoney(ui.debts, 0); setMoney(ui.insuranceCost, 0); setMoney(ui.investments, 0); setMoney(ui.emergencyReserve, 0); setMoney(ui.schoolCosts, 0);
-  setMoney(ui.coverageAbsence, 0); setMoney(ui.coverageDisability, 0); setMoney(ui.coverageCritical, 0); setMoney(ui.entryAmount, 0);
+  setMoney(ui.coverageAbsence, 0); setMoney(ui.coverageDisability, 0); setMoney(ui.coverageCritical, 0); setMoney(ui.fixedHousing,0); setMoney(ui.fixedHealth,0); setMoney(ui.varFood,0); setMoney(ui.varLeisure,0); setMoney(ui.entryAmount, 0);
 
   ui.loading.classList.add('hidden');
   ui.onboarding.classList.remove('hidden');
