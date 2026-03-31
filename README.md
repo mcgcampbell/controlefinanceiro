@@ -1,10 +1,15 @@
 # Controle Financeiro Pessoal (MVP)
 
-## Atualizações desta versão
+## Melhorias desta refatoração
 
-- Nova seção de **emergências cotidianas** com custo médio, indicação de cobertura pela reserva atual e link de fonte por item.
-- Tooltips nas caixas de **reserva** e **risco de ruína** para explicar o impacto prático no dia a dia.
-- Mantida visão estilo planilha com classificação por necessários/supérfluos/investimento/salário/seguro.
+- Jornada inicial com menos fricção: botão “Ver painel rápido” + onboarding curto.
+- Linguagem mais humana e menos técnica em títulos e mensagens.
+- Nova camada de interpretação com status geral, resumo e razões objetivas.
+- Bloco “O que fazer agora” com 3 prioridades dinâmicas por perfil.
+- Hierarquia da tela reorganizada: valor primeiro, detalhe depois.
+- Validações com feedback inline (sem `alert()` como principal feedback).
+- Correção de duplicidade de custos: detalhamento substitui valor agregado quando informado.
+- Gráficos/listas de necessários, supérfluos e investimentos conectados aos dados informados e lançamentos.
 
 ## Rodar localmente
 
