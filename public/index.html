@@ -18,8 +18,7 @@
         <p class="badge">Planejamento financeiro pessoal</p>
         <h1>Organização financeira com estética premium e visão de proteção.</h1>
         <p class="hero__subtitle">
-          Comece em segundos, acompanhe seus indicadores e entenda impactos no
-          curto, médio e longo prazo sem complexidade.
+          Comece em segundos, acompanhe seus indicadores e entenda impactos no curto, médio e longo prazo sem complexidade.
         </p>
         <a class="btn btn--primary" href="#app">Começar agora</a>
       </div>
@@ -27,18 +26,9 @@
 
     <main>
       <section class="benefits container" aria-label="Benefícios da ferramenta">
-        <article class="card glass">
-          <h2>Interface moderna</h2>
-          <p>Visual inspirado em apps premium: leve, intuitivo e elegante.</p>
-        </article>
-        <article class="card glass">
-          <h2>Decisões com clareza</h2>
-          <p>Veja seus números principais e receba orientações objetivas.</p>
-        </article>
-        <article class="card glass">
-          <h2>Planejamento + proteção</h2>
-          <p>Entenda a importância de continuidade financeira sem pressão.</p>
-        </article>
+        <article class="card glass"><h2>Interface moderna</h2><p>Visual inspirado em apps premium: leve, intuitivo e elegante.</p></article>
+        <article class="card glass"><h2>Decisões com clareza</h2><p>Veja seus números principais e receba orientações objetivas.</p></article>
+        <article class="card glass"><h2>Planejamento + proteção</h2><p>Entenda a importância de continuidade financeira sem pressão.</p></article>
       </section>
 
       <section id="app" class="app container" aria-label="Aplicativo de controle financeiro">
@@ -47,9 +37,34 @@
           <p>MVP sem login para validar usabilidade e geração de valor imediato.</p>
         </div>
 
-        <div id="loadingState" class="loading" role="status" aria-live="polite">
-          Carregando experiência...
-        </div>
+        <div id="loadingState" class="loading" role="status" aria-live="polite">Carregando experiência...</div>
+
+        <section id="onboardingCard" class="card glass hidden" aria-label="Questionário inicial">
+          <h3>Questionário inicial</h3>
+          <p class="small">Responda em 1 minuto para montarmos um painel mais adequado ao seu perfil financeiro.</p>
+          <div class="onboarding-grid">
+            <label>Você costuma controlar seus gastos?
+              <select id="qControl"><option value="low">Quase nunca</option><option value="mid">Às vezes</option><option value="high">Sempre</option></select>
+            </label>
+            <label>Você tem clareza do seu orçamento mensal?
+              <select id="qBudget"><option value="low">Baixa</option><option value="mid">Média</option><option value="high">Alta</option></select>
+            </label>
+            <label>Renda mensal aproximada (R$)
+              <input type="number" id="qIncome" min="0" step="0.01" />
+            </label>
+            <label>Custos fixos aproximados (R$)
+              <input type="number" id="qFixedCosts" min="0" step="0.01" />
+            </label>
+            <label>Quantidade de dependentes
+              <input type="number" id="qDependents" min="0" step="1" />
+            </label>
+            <label id="qSchoolCostsWrapper" class="hidden">Mensalidade/custos escolares (R$)
+              <input type="number" id="qSchoolCosts" min="0" step="0.01" />
+            </label>
+          </div>
+          <button type="button" id="startExperienceBtn" class="btn btn--primary">Gerar meu painel</button>
+          <p id="profileResult" class="small"></p>
+        </section>
 
         <div id="appContent" class="hidden">
           <nav class="tabs" aria-label="Navegação de funcionalidades">
@@ -61,7 +76,6 @@
             <div class="app__grid">
               <form id="financeForm" class="card form glass" novalidate>
                 <h3>Dados financeiros base</h3>
-
                 <label>Renda mensal <input type="number" id="monthlyIncome" min="0" step="0.01" /></label>
                 <label>Outras entradas <input type="number" id="extraIncome" min="0" step="0.01" /></label>
                 <label>Custos fixos <input type="number" id="fixedCosts" min="0" step="0.01" /></label>
@@ -71,50 +85,60 @@
                 <label>Reserva de emergência <input type="number" id="emergencyReserve" min="0" step="0.01" /></label>
 
                 <label>Quantidade de dependentes <input type="number" id="dependentsCount" min="0" step="1" /></label>
-                <label>
-                  Situação de renda dos dependentes
+                <label>Situação de renda dos dependentes
                   <select id="dependentsIncomeProfile">
                     <option value="none_work">Dependentes não trabalham</option>
                     <option value="some_work">Parte trabalha</option>
                     <option value="all_work">Dependentes trabalham</option>
                   </select>
                 </label>
-
-                <label>
-                  Possui seguro de vida?
-                  <select id="hasInsurance">
-                    <option value="no">Não</option>
-                    <option value="yes">Sim</option>
-                  </select>
+                <label id="schoolCostsWrapper" class="hidden required-field">Mensalidade/custos escolares (obrigatório se tiver dependentes)
+                  <input type="number" id="schoolCosts" min="0" step="0.01" />
                 </label>
 
+                <label>Possui seguro de vida?
+                  <select id="hasInsurance"><option value="no">Não</option><option value="yes">Sim</option></select>
+                </label>
                 <label id="coverageField" class="hidden">Cobertura atual (R$) <input type="number" id="insuranceCoverage" min="0" step="0.01" /></label>
-                <p class="small">Estrutura pronta para incluir Modo Avançado em próxima versão.</p>
               </form>
 
               <section class="results">
                 <div class="metrics">
-                  <article class="card metric"><h3>Saldo mensal</h3><p id="monthlyBalance">R$ 0,00</p></article>
-                  <article class="card metric"><h3>Total de entradas</h3><p id="totalIncome">R$ 0,00</p></article>
-                  <article class="card metric"><h3>Total de saídas</h3><p id="totalExpenses">R$ 0,00</p></article>
-                  <article class="card metric"><h3>Taxa de poupança</h3><p id="savingsRate">0%</p></article>
+                  <article class="card metric"><h3>Saldo livre mensal</h3><p id="monthlyBalance">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total entradas</h3><p id="totalIncome">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Despesas essenciais</h3><p id="totalExpenses">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Aporte em investimentos</h3><p id="investingValue">R$ 0,00</p></article>
                   <article class="card metric"><h3>Meses de reserva</h3><p id="emergencyMonths">0,0</p></article>
                   <article class="card metric"><h3>Saúde financeira</h3><p id="healthIndicator" class="status status--neutral">Neutra</p></article>
                 </div>
 
                 <article class="card glass">
-                  <h3>Folga orçamentária</h3>
-                  <div class="meter">
-                    <div id="budgetSlackFill" class="meter__fill"></div>
+                  <h3>Gráficos de saúde financeira</h3>
+                  <div class="chart-group">
+                    <div>
+                      <p class="small">Folga orçamentária</p>
+                      <div class="meter"><div id="budgetSlackFill" class="meter__fill"></div></div>
+                      <p id="budgetSlackText" class="small">Preencha os dados para visualizar sua folga orçamentária.</p>
+                    </div>
+                    <div>
+                      <p class="small">Liquidez (meses de reserva)</p>
+                      <div class="meter"><div id="liquidityFill" class="meter__fill meter__fill--dark"></div></div>
+                      <p id="liquidityText" class="small">---</p>
+                    </div>
                   </div>
-                  <p id="budgetSlackText" class="small">Preencha os dados para visualizar sua folga orçamentária.</p>
+                  <div class="pie-wrap">
+                    <div id="incomePie" class="pie-chart"></div>
+                    <ul class="pie-legend">
+                      <li><span class="legend-color legend-color--expense"></span> Despesas essenciais</li>
+                      <li><span class="legend-color legend-color--invest"></span> Investimentos</li>
+                      <li><span class="legend-color legend-color--free"></span> Folga livre</li>
+                    </ul>
+                  </div>
                 </article>
 
                 <article class="card glass">
                   <h3>Insights automáticos</h3>
-                  <ul id="insightsList" class="insights">
-                    <li>Preencha seus dados para receber recomendações personalizadas.</li>
-                  </ul>
+                  <ul id="insightsList" class="insights"><li>Preencha seus dados para receber recomendações personalizadas.</li></ul>
                 </article>
 
                 <article id="protectionCard" class="card protection glass">
@@ -124,30 +148,11 @@
                 </article>
 
                 <article class="card glass">
-                  <h3>Pré-análise de necessidade de seguro</h3>
-                  <p class="small">Estimativa educativa para cenários de ausência, invalidez e doença grave.</p>
+                  <h3>Pré-análise de necessidade de seguro (base: múltiplos da renda anual)</h3>
                   <div class="coverage-lines">
-                    <div class="coverage-line">
-                      <div class="coverage-line__header">
-                        <span>Ausência</span>
-                        <strong id="absenceGapLabel">R$ 0,00 de diferença</strong>
-                      </div>
-                      <div class="bar"><div id="absenceBar" class="bar__fill"></div></div>
-                    </div>
-                    <div class="coverage-line">
-                      <div class="coverage-line__header">
-                        <span>Invalidez</span>
-                        <strong id="disabilityGapLabel">R$ 0,00 de diferença</strong>
-                      </div>
-                      <div class="bar"><div id="disabilityBar" class="bar__fill"></div></div>
-                    </div>
-                    <div class="coverage-line">
-                      <div class="coverage-line__header">
-                        <span>Doença grave</span>
-                        <strong id="criticalGapLabel">R$ 0,00 de diferença</strong>
-                      </div>
-                      <div class="bar"><div id="criticalBar" class="bar__fill"></div></div>
-                    </div>
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Ausência (5 anos de renda)</span><strong id="absenceGapLabel">R$ 0,00</strong></div><div class="bar"><div id="absenceBar" class="bar__fill"></div></div></div>
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Invalidez total/parcial (10 anos)</span><strong id="disabilityGapLabel">R$ 0,00</strong></div><div class="bar"><div id="disabilityBar" class="bar__fill"></div></div></div>
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Doenças graves (2 anos)</span><strong id="criticalGapLabel">R$ 0,00</strong></div><div class="bar"><div id="criticalBar" class="bar__fill"></div></div></div>
                   </div>
                   <p id="insuranceNeedSummary" class="small"></p>
                 </article>
@@ -159,46 +164,35 @@
             <div class="app__grid">
               <article class="card glass form">
                 <h3>Registrar movimentação</h3>
-                <label>
-                  Tipo
-                  <select id="entryType">
-                    <option value="income">Entrada</option>
-                    <option value="expense">Saída</option>
-                  </select>
+                <label>Tipo
+                  <select id="entryType"><option value="income">Entrada</option><option value="expense">Saída</option></select>
                 </label>
-                <label>
-                  Categoria
+                <label>Categoria
                   <select id="entryCategory"></select>
                 </label>
                 <label>Descrição <input type="text" id="entryDescription" placeholder="Ex.: Freelancer, mercado, transporte" /></label>
                 <label>Valor (R$) <input type="number" id="entryAmount" min="0" step="0.01" /></label>
                 <button id="addEntryBtn" type="button" class="btn btn--primary btn--full">Adicionar</button>
-                <p class="small">Use esta aba para simular decisões e visualizar impacto projetado.</p>
+                <button id="resetEntriesBtn" type="button" class="btn btn--ghost btn--full">Resetar tudo</button>
               </article>
 
               <section class="results">
                 <article class="card glass">
                   <h3>Movimentações lançadas</h3>
-                  <ul id="entriesList" class="entries-list">
-                    <li class="empty">Nenhuma movimentação adicionada ainda.</li>
-                  </ul>
+                  <ul id="entriesList" class="entries-list"><li class="empty">Nenhuma movimentação adicionada ainda.</li></ul>
                 </article>
 
                 <article class="card glass">
-                  <h3>Impacto por horizonte</h3>
+                  <h3>Projeção futura</h3>
                   <div class="projection-grid">
-                    <div class="projection-card">
-                      <p>Curto prazo (3 meses)</p>
-                      <strong id="projectionShort">R$ 0,00</strong>
-                    </div>
-                    <div class="projection-card">
-                      <p>Médio prazo (12 meses)</p>
-                      <strong id="projectionMedium">R$ 0,00</strong>
-                    </div>
-                    <div class="projection-card">
-                      <p>Longo prazo (36 meses)</p>
-                      <strong id="projectionLong">R$ 0,00</strong>
-                    </div>
+                    <div class="projection-card"><p>Curto prazo (3 meses)</p><strong id="projectionShort">R$ 0,00</strong></div>
+                    <div class="projection-card"><p>Médio prazo (12 meses)</p><strong id="projectionMedium">R$ 0,00</strong></div>
+                    <div class="projection-card"><p>Longo prazo (36 meses)</p><strong id="projectionLong">R$ 0,00</strong></div>
+                  </div>
+                  <div class="future-bars">
+                    <div><p class="small">Comprometimento futuro (3m)</p><div class="bar"><div id="futureBarShort" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">Comprometimento futuro (12m)</p><div class="bar"><div id="futureBarMedium" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">Comprometimento futuro (36m)</p><div class="bar"><div id="futureBarLong" class="bar__fill bar__fill--dark"></div></div></div>
                   </div>
                   <p id="projectionNarrative" class="small">Adicione entradas e saídas para visualizar tendências de evolução.</p>
                 </article>
@@ -209,12 +203,7 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="container">
-        <p>Ferramenta educativa. Não constitui recomendação financeira individual.</p>
-      </div>
-    </footer>
-
+    <footer class="footer"><div class="container"><p>Ferramenta educativa. Não constitui recomendação financeira individual.</p></div></footer>
     <script src="/js/app.js"></script>
   </body>
 </html>
