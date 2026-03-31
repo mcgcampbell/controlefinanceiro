@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clareza Financeira | Organização, Clareza e Proteção</title>
+    <meta
+      name="description"
+      content="Organize suas finanças, visualize sua saúde financeira e entenda como proteger seu planejamento com clareza."
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero__content">
+        <p class="badge">Planejamento financeiro pessoal</p>
+        <h1>Mais clareza para seu dinheiro. Mais segurança para seus planos.</h1>
+        <p class="hero__subtitle">
+          Um painel simples para entender sua vida financeira em minutos — com
+          visão prática de organização, reserva e proteção.
+        </p>
+        <a class="btn btn--primary" href="#app">Começar agora</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="benefits container" aria-label="Benefícios da ferramenta">
+        <article class="card">
+          <h2>Simples para começar</h2>
+          <p>Preencha poucos campos e veja indicadores em tempo real.</p>
+        </article>
+        <article class="card">
+          <h2>Didática e visual</h2>
+          <p>Entenda sua saúde financeira sem termos técnicos complexos.</p>
+        </article>
+        <article class="card">
+          <h2>Clareza com proteção</h2>
+          <p>Conecte organização financeira com uma base de proteção pessoal.</p>
+        </article>
+      </section>
+
+      <section id="app" class="app container" aria-label="Aplicativo de controle financeiro">
+        <div class="app__header">
+          <h2>Painel financeiro essencial</h2>
+          <p>Preencha seus dados e acompanhe os resultados imediatamente.</p>
+        </div>
+
+        <div id="loadingState" class="loading" role="status" aria-live="polite">
+          Carregando configuração inicial...
+        </div>
+
+        <div id="appContent" class="app__grid hidden">
+          <form id="financeForm" class="card form" novalidate>
+            <h3>Seus dados mensais</h3>
+
+            <label>
+              Renda mensal
+              <input type="number" id="monthlyIncome" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Outras entradas
+              <input type="number" id="extraIncome" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Custos fixos
+              <input type="number" id="fixedCosts" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Custos variáveis
+              <input type="number" id="variableCosts" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Dívidas (parcelas mensais)
+              <input type="number" id="debts" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Investimentos mensais
+              <input type="number" id="investments" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Reserva de emergência atual
+              <input type="number" id="emergencyReserve" min="0" step="0.01" />
+            </label>
+
+            <label>
+              Possui seguro de vida?
+              <select id="hasInsurance">
+                <option value="no">Não</option>
+                <option value="yes">Sim</option>
+              </select>
+            </label>
+
+            <label id="coverageField" class="hidden">
+              Cobertura atual (R$)
+              <input type="number" id="insuranceCoverage" min="0" step="0.01" />
+            </label>
+
+            <p class="small">Modo avançado já previsto para evolução futura.</p>
+          </form>
+
+          <section class="results">
+            <div class="metrics">
+              <article class="card metric">
+                <h3>Saldo mensal</h3>
+                <p id="monthlyBalance">R$ 0,00</p>
+              </article>
+              <article class="card metric">
+                <h3>Total de entradas</h3>
+                <p id="totalIncome">R$ 0,00</p>
+              </article>
+              <article class="card metric">
+                <h3>Total de saídas</h3>
+                <p id="totalExpenses">R$ 0,00</p>
+              </article>
+              <article class="card metric">
+                <h3>Taxa de poupança</h3>
+                <p id="savingsRate">0%</p>
+              </article>
+              <article class="card metric">
+                <h3>Meses de reserva</h3>
+                <p id="emergencyMonths">0,0</p>
+              </article>
+              <article class="card metric">
+                <h3>Saúde financeira</h3>
+                <p id="healthIndicator" class="status status--neutral">Neutra</p>
+              </article>
+            </div>
+
+            <article class="card">
+              <h3>Insights automáticos</h3>
+              <ul id="insightsList" class="insights">
+                <li>Preencha seus dados para receber recomendações personalizadas.</li>
+              </ul>
+            </article>
+
+            <article id="protectionCard" class="card protection">
+              <h3>Base de proteção financeira</h3>
+              <p id="protectionMessage">
+                Informe se possui seguro para conectar proteção ao seu planejamento.
+              </p>
+              <button type="button" id="protectionCta" class="btn btn--secondary hidden">
+                Entender minha proteção
+              </button>
+            </article>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Ferramenta educativa. Não constitui recomendação financeira individual.</p>
+      </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>
