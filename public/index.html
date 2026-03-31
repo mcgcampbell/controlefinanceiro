@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clareza Financeira | Organização, Clareza e Proteção</title>
+    <meta name="description" content="Organize suas finanças, visualize sua saúde financeira e entenda como proteger seu planejamento com clareza." />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__glow hero__glow--one"></div>
+      <div class="hero__glow hero__glow--two"></div>
+      <div class="container hero__content">
+        <p class="badge">Planejamento financeiro pessoal</p>
+        <h1>Organização financeira, clareza de cash flow e visão de proteção.</h1>
+        <p class="hero__subtitle">Um painel minimalista para entender sua saúde financeira, projetar cenários e avaliar cobertura de seguro por tipo.</p>
+        <div class="hero__cta-row">
+          <a class="btn btn--primary" href="#app">Começar agora</a>
+          <a class="btn btn--ghost" href="https://instagram.com/matheus_campbell" target="_blank" rel="noreferrer">Instagram</a>
+          <a class="btn btn--dark" href="https://wa.me/5511995488859" target="_blank" rel="noreferrer">WhatsApp</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="benefits container">
+        <article class="card glass"><h2>Leitura rápida</h2><p>Indicadores e gráficos com feedback instantâneo.</p></article>
+        <article class="card glass"><h2>Cash flow futuro</h2><p>Projeção por horizonte: 1, 3, 6, 12 e 24 meses.</p></article>
+        <article class="card glass"><h2>Proteção por cobertura</h2><p>Ausência, invalidez e doenças graves avaliadas separadamente.</p></article>
+      </section>
+
+      <section id="app" class="app container">
+        <div class="app__header">
+          <h2>Painel Financeiro Essencial</h2>
+          <p>MVP sem login para validação rápida da experiência.</p>
+        </div>
+
+        <div id="loadingState" class="loading">Carregando experiência...</div>
+
+        <section id="onboardingCard" class="card glass hidden">
+          <h3>Questionário inicial</h3>
+          <div class="onboarding-grid">
+            <label>Você costuma controlar seus gastos?<select id="qControl"><option value="low">Quase nunca</option><option value="mid">Às vezes</option><option value="high">Sempre</option></select></label>
+            <label>Você tem clareza do orçamento mensal?<select id="qBudget"><option value="low">Baixa</option><option value="mid">Média</option><option value="high">Alta</option></select></label>
+            <label>Renda mensal aproximada<input type="text" id="qIncome" class="money-input" inputmode="numeric" /></label>
+            <label>Custos fixos aproximados<input type="text" id="qFixedCosts" class="money-input" inputmode="numeric" /></label>
+            <label>Quantidade de dependentes<input type="number" id="qDependents" min="0" step="1" /></label>
+            <label id="qSchoolCostsWrapper" class="hidden">Custos escolares mensais<input type="text" id="qSchoolCosts" class="money-input" inputmode="numeric" /></label>
+          </div>
+          <button type="button" id="startExperienceBtn" class="btn btn--primary">Gerar meu painel</button>
+          <p id="profileResult" class="small"></p>
+        </section>
+
+        <div id="appContent" class="hidden">
+          <nav class="tabs">
+            <button class="tab-btn active" data-tab="tabOverview" type="button">Visão Geral</button>
+            <button class="tab-btn" data-tab="tabEntries" type="button">Entradas & Saídas</button>
+          </nav>
+
+          <section id="tabOverview" class="tab-panel active">
+            <div class="app__grid">
+              <form id="financeForm" class="card form glass" novalidate>
+                <h3>Dados financeiros base</h3>
+                <label>Renda mensal<input type="text" id="monthlyIncome" class="money-input" inputmode="numeric" /></label>
+                <label>Outras entradas<input type="text" id="extraIncome" class="money-input" inputmode="numeric" /></label>
+                <label>Custos fixos<input type="text" id="fixedCosts" class="money-input" inputmode="numeric" /></label>
+                <label>Custos variáveis<input type="text" id="variableCosts" class="money-input" inputmode="numeric" /></label>
+                <label>Dívidas (mensal)<input type="text" id="debts" class="money-input" inputmode="numeric" /></label>
+                <label>Investimentos (mensal)<input type="text" id="investments" class="money-input" inputmode="numeric" /></label>
+                <label>Reserva de emergência<input type="text" id="emergencyReserve" class="money-input" inputmode="numeric" /></label>
+
+                <label>Quantidade de dependentes<input type="number" id="dependentsCount" min="0" step="1" /></label>
+                <label>Situação de renda dos dependentes<select id="dependentsIncomeProfile"><option value="none_work">Não trabalham</option><option value="some_work">Parte trabalha</option><option value="all_work">Trabalham</option></select></label>
+                <label id="schoolCostsWrapper" class="hidden required-field">Custos escolares (obrigatório para dependentes)<input type="text" id="schoolCosts" class="money-input" inputmode="numeric" /></label>
+
+                <label>Possui seguro de vida?<select id="hasInsurance"><option value="no">Não</option><option value="yes">Sim</option></select></label>
+                <div id="coverageFields" class="hidden coverage-grid">
+                  <label>Cobertura para ausência<input type="text" id="coverageAbsence" class="money-input" inputmode="numeric" /></label>
+                  <label>Cobertura para invalidez<input type="text" id="coverageDisability" class="money-input" inputmode="numeric" /></label>
+                  <label>Cobertura para doenças graves<input type="text" id="coverageCritical" class="money-input" inputmode="numeric" /></label>
+                </div>
+              </form>
+
+              <section class="results sticky-panel">
+                <div class="metrics">
+                  <article class="card metric"><h3>Saldo livre mensal</h3><p id="monthlyBalance">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total entradas</h3><p id="totalIncome">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Despesas essenciais</h3><p id="totalExpenses">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Aporte em investimentos</h3><p id="investingValue">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Meses de reserva</h3><p id="emergencyMonths">0,0</p></article>
+                  <article class="card metric"><h3>Saúde financeira</h3><p id="healthIndicator" class="status status--neutral">Neutra</p></article>
+                </div>
+
+                <article class="card glass">
+                  <h3>Gráficos de saúde financeira</h3>
+                  <p class="small">Folga orçamentária</p><div class="meter"><div id="budgetSlackFill" class="meter__fill"></div></div><p id="budgetSlackText" class="small">---</p>
+                  <p class="small">Liquidez (meses de reserva)</p><div class="meter"><div id="liquidityFill" class="meter__fill meter__fill--dark"></div></div><p id="liquidityText" class="small">---</p>
+                  <div class="pie-wrap"><div id="incomePie" class="pie-chart"></div><ul class="pie-legend"><li><span class="legend-color legend-color--expense"></span>Despesas</li><li><span class="legend-color legend-color--invest"></span>Investimentos</li><li><span class="legend-color legend-color--free"></span>Folga</li></ul></div>
+                </article>
+
+                <article class="card glass"><h3>Insights automáticos</h3><ul id="insightsList" class="insights"><li>Preencha os dados para iniciar.</li></ul></article>
+
+                <article id="protectionCard" class="card protection glass">
+                  <h3>Pré-análise de proteção</h3>
+                  <p id="protectionMessage">Informe seus dados para avaliar necessidade de proteção.</p>
+                  <button type="button" id="protectionCta" class="btn btn--dark hidden">Falar sobre proteção</button>
+                </article>
+
+                <article class="card glass">
+                  <h3>Cobertura por tipo</h3>
+                  <div class="coverage-lines">
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Ausência (5 anos de renda)</span><strong id="absenceGapLabel">R$ 0,00</strong></div><div class="bar"><div id="absenceBar" class="bar__fill"></div></div></div>
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Invalidez (10 anos de renda)</span><strong id="disabilityGapLabel">R$ 0,00</strong></div><div class="bar"><div id="disabilityBar" class="bar__fill"></div></div></div>
+                    <div class="coverage-line"><div class="coverage-line__header"><span>Doenças graves (2 anos de renda)</span><strong id="criticalGapLabel">R$ 0,00</strong></div><div class="bar"><div id="criticalBar" class="bar__fill"></div></div></div>
+                  </div>
+                  <p id="insuranceNeedSummary" class="small"></p>
+                </article>
+              </section>
+            </div>
+          </section>
+
+          <section id="tabEntries" class="tab-panel">
+            <div class="app__grid">
+              <article class="card glass form">
+                <h3>Registrar movimentação</h3>
+                <label>Tipo<select id="entryType"><option value="income">Entrada</option><option value="expense">Saída</option></select></label>
+                <label>Categoria<select id="entryCategory"></select></label>
+                <label>Descrição<input type="text" id="entryDescription" placeholder="Ex.: Freelancer, mercado" /></label>
+                <label>Valor<input type="text" id="entryAmount" class="money-input" inputmode="numeric" /></label>
+                <button id="addEntryBtn" type="button" class="btn btn--primary btn--full">Adicionar</button>
+                <button id="resetEntriesBtn" type="button" class="btn btn--ghost btn--full">Resetar tudo</button>
+              </article>
+
+              <section class="results sticky-panel">
+                <article class="card glass"><h3>Movimentações lançadas</h3><ul id="entriesList" class="entries-list"><li class="empty">Nenhuma movimentação adicionada.</li></ul></article>
+                <article class="card glass">
+                  <h3>Projeção de cash flow (base da aba 1 + lançamentos)</h3>
+                  <div class="projection-grid" id="cashflowCards"></div>
+                  <div class="future-bars">
+                    <div><p class="small">1 mês</p><div class="bar"><div id="futureBar1" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">3 meses</p><div class="bar"><div id="futureBar3" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">6 meses</p><div class="bar"><div id="futureBar6" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">12 meses</p><div class="bar"><div id="futureBar12" class="bar__fill bar__fill--dark"></div></div></div>
+                    <div><p class="small">24 meses</p><div class="bar"><div id="futureBar24" class="bar__fill bar__fill--dark"></div></div></div>
+                  </div>
+                  <p id="projectionNarrative" class="small">As barras mostram o nível de pressão financeira projetada no horizonte.</p>
+                </article>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><div class="container"><p>Ferramenta educativa. Não constitui recomendação financeira individual.</p></div></footer>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
