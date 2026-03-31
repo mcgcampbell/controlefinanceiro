@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clareza Financeira | Organização, Clareza e Proteção</title>
+    <meta
+      name="description"
+      content="Organize suas finanças, visualize sua saúde financeira e entenda como proteger seu planejamento com clareza."
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__glow hero__glow--one"></div>
+      <div class="hero__glow hero__glow--two"></div>
+      <div class="container hero__content">
+        <p class="badge">Planejamento financeiro pessoal</p>
+        <h1>Organização financeira com estética premium e visão de proteção.</h1>
+        <p class="hero__subtitle">
+          Comece em segundos, acompanhe seus indicadores e entenda impactos no
+          curto, médio e longo prazo sem complexidade.
+        </p>
+        <a class="btn btn--primary" href="#app">Começar agora</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="benefits container" aria-label="Benefícios da ferramenta">
+        <article class="card glass">
+          <h2>Interface moderna</h2>
+          <p>Visual inspirado em apps premium: leve, intuitivo e elegante.</p>
+        </article>
+        <article class="card glass">
+          <h2>Decisões com clareza</h2>
+          <p>Veja seus números principais e receba orientações objetivas.</p>
+        </article>
+        <article class="card glass">
+          <h2>Planejamento + proteção</h2>
+          <p>Entenda a importância de continuidade financeira sem pressão.</p>
+        </article>
+      </section>
+
+      <section id="app" class="app container" aria-label="Aplicativo de controle financeiro">
+        <div class="app__header">
+          <h2>Painel Financeiro Essencial</h2>
+          <p>MVP sem login para validar usabilidade e geração de valor imediato.</p>
+        </div>
+
+        <div id="loadingState" class="loading" role="status" aria-live="polite">
+          Carregando experiência...
+        </div>
+
+        <div id="appContent" class="hidden">
+          <nav class="tabs" aria-label="Navegação de funcionalidades">
+            <button class="tab-btn active" data-tab="tabOverview" type="button">Visão Geral</button>
+            <button class="tab-btn" data-tab="tabEntries" type="button">Entradas & Saídas</button>
+          </nav>
+
+          <section id="tabOverview" class="tab-panel active">
+            <div class="app__grid">
+              <form id="financeForm" class="card form glass" novalidate>
+                <h3>Dados financeiros base</h3>
+
+                <label>Renda mensal <input type="number" id="monthlyIncome" min="0" step="0.01" /></label>
+                <label>Outras entradas <input type="number" id="extraIncome" min="0" step="0.01" /></label>
+                <label>Custos fixos <input type="number" id="fixedCosts" min="0" step="0.01" /></label>
+                <label>Custos variáveis <input type="number" id="variableCosts" min="0" step="0.01" /></label>
+                <label>Dívidas (mensal) <input type="number" id="debts" min="0" step="0.01" /></label>
+                <label>Investimentos (mensal) <input type="number" id="investments" min="0" step="0.01" /></label>
+                <label>Reserva de emergência <input type="number" id="emergencyReserve" min="0" step="0.01" /></label>
+
+                <label>
+                  Possui seguro de vida?
+                  <select id="hasInsurance">
+                    <option value="no">Não</option>
+                    <option value="yes">Sim</option>
+                  </select>
+                </label>
+
+                <label id="coverageField" class="hidden">Cobertura atual (R$) <input type="number" id="insuranceCoverage" min="0" step="0.01" /></label>
+                <p class="small">Estrutura pronta para incluir Modo Avançado em próxima versão.</p>
+              </form>
+
+              <section class="results">
+                <div class="metrics">
+                  <article class="card metric"><h3>Saldo mensal</h3><p id="monthlyBalance">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total de entradas</h3><p id="totalIncome">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Total de saídas</h3><p id="totalExpenses">R$ 0,00</p></article>
+                  <article class="card metric"><h3>Taxa de poupança</h3><p id="savingsRate">0%</p></article>
+                  <article class="card metric"><h3>Meses de reserva</h3><p id="emergencyMonths">0,0</p></article>
+                  <article class="card metric"><h3>Saúde financeira</h3><p id="healthIndicator" class="status status--neutral">Neutra</p></article>
+                </div>
+
+                <article class="card glass">
+                  <h3>Insights automáticos</h3>
+                  <ul id="insightsList" class="insights">
+                    <li>Preencha seus dados para receber recomendações personalizadas.</li>
+                  </ul>
+                </article>
+
+                <article id="protectionCard" class="card protection glass">
+                  <h3>Base de proteção financeira</h3>
+                  <p id="protectionMessage">Informe se possui seguro para conectar proteção ao seu planejamento.</p>
+                  <button type="button" id="protectionCta" class="btn btn--secondary hidden">Entender minha proteção</button>
+                </article>
+              </section>
+            </div>
+          </section>
+
+          <section id="tabEntries" class="tab-panel">
+            <div class="app__grid">
+              <article class="card glass form">
+                <h3>Registrar movimentação</h3>
+                <label>
+                  Tipo
+                  <select id="entryType">
+                    <option value="income">Entrada</option>
+                    <option value="expense">Saída</option>
+                  </select>
+                </label>
+                <label>Descrição <input type="text" id="entryDescription" placeholder="Ex.: Freelancer, mercado, transporte" /></label>
+                <label>Valor (R$) <input type="number" id="entryAmount" min="0" step="0.01" /></label>
+                <button id="addEntryBtn" type="button" class="btn btn--primary btn--full">Adicionar</button>
+                <p class="small">Use esta aba para simular decisões e visualizar impacto projetado.</p>
+              </article>
+
+              <section class="results">
+                <article class="card glass">
+                  <h3>Movimentações lançadas</h3>
+                  <ul id="entriesList" class="entries-list">
+                    <li class="empty">Nenhuma movimentação adicionada ainda.</li>
+                  </ul>
+                </article>
+
+                <article class="card glass">
+                  <h3>Impacto por horizonte</h3>
+                  <div class="projection-grid">
+                    <div class="projection-card">
+                      <p>Curto prazo (3 meses)</p>
+                      <strong id="projectionShort">R$ 0,00</strong>
+                    </div>
+                    <div class="projection-card">
+                      <p>Médio prazo (12 meses)</p>
+                      <strong id="projectionMedium">R$ 0,00</strong>
+                    </div>
+                    <div class="projection-card">
+                      <p>Longo prazo (36 meses)</p>
+                      <strong id="projectionLong">R$ 0,00</strong>
+                    </div>
+                  </div>
+                  <p id="projectionNarrative" class="small">Adicione entradas e saídas para visualizar tendências de evolução.</p>
+                </article>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Ferramenta educativa. Não constitui recomendação financeira individual.</p>
+      </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>
