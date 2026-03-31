@@ -1,0 +1,39 @@
+:root{--bg:#f3f5f8;--text:#101828;--muted:#667085;--line:#d0d5dd;--card:#fff;--dark:#101828}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+.container{width:min(1100px,92%);margin:0 auto}.hero{padding:56px 0;background:linear-gradient(140deg,#f8fafc,#edf2f7)}.badge{display:inline-block;background:#111827;color:#fff;padding:8px 12px;border-radius:999px}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.primary{background:#ff9d3a;color:#1f2937}.ghost{background:#fff;border:1px solid var(--line);color:#344054}.dark{background:#111827;color:#fff}
+.cta-row{display:flex;gap:10px;flex-wrap:wrap}.app{padding:22px 0 40px}.loading{padding:12px;border:1px dashed #f2b36a;background:#fff8ef;border-radius:12px}.hidden{display:none!important}
+.card{background:var(--card);border:1px solid #eaecf0;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(16,24,40,.06)}
+.small{font-size:.88rem;color:var(--muted)}.micro{font-size:.82rem;color:#667085}
+.steps{display:flex;gap:8px;margin:10px 0}.step{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px}.step.active{background:#111827;color:#fff}
+.step-panel{display:none}.step-panel.active{display:grid;gap:10px}.followup.hidden{display:none}
+label{display:grid;gap:6px;font-weight:600;color:#475467}input,select{padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:#fff}
+.wizard-actions{display:flex;gap:8px;margin-top:14px}
+.sticky-top{position:sticky;top:0;z-index:20}.top-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:#f8fafc;border:1px solid #eaecf0;border-radius:12px;padding:10px}.metric h4{margin:0;color:#667085;font-size:.85rem}.metric p{margin:8px 0 0;font-weight:700}
+.bars{display:grid;gap:8px;margin-top:10px}.bar{height:10px;background:#eaecf0;border-radius:999px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#ff9d3a,#16b364)}.fill.dark{background:linear-gradient(90deg,#111827,#475467)}
+.inner{margin-top:12px}.form-block{margin-top:12px}.coverage-grid{display:grid;gap:8px}.entry-row{display:grid;gap:8px}.entry-list{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
+.entry-item{display:flex;justify-content:space-between;border:1px solid #eaecf0;background:#fff;border-radius:10px;padding:9px}.entry-meta{color:#667085;font-size:.85rem}.delete{border:0;background:#fee4e2;color:#912018;border-radius:8px;padding:5px 8px;cursor:pointer}
+.scenario-grid{display:grid;gap:10px}.scenario{border:1px solid #eaecf0;border-radius:12px;padding:10px;background:#f8fafc}
+@media(min-width:900px){.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.entry-row{grid-template-columns:1fr 1fr 1.2fr 1fr 1fr auto auto}.coverage-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.scenario-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+.summary-bars{display:grid;gap:8px;margin:10px 0}
+.summary-row{display:grid;grid-template-columns:140px 1fr auto;gap:8px;align-items:center;font-size:.88rem}
+.summary-track{height:10px;background:#eaecf0;border-radius:999px;overflow:hidden}
+.summary-fill{height:100%}
+.sheet-grid{display:grid;gap:10px}
+.sheet-list{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.88rem}
+.sheet-list li{display:flex;justify-content:space-between;border-bottom:1px dashed #eaecf0;padding:3px 0}
+@media(min-width:900px){.sheet-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+
+.has-tip{position:relative}
+.tip{display:none;position:absolute;left:8px;right:8px;bottom:8px;background:#111827;color:#fff;padding:8px;border-radius:8px;font-size:.78rem;z-index:3}
+.has-tip:hover .tip{display:block}
+
+
+.footer-contact{position:sticky;bottom:0;background:rgba(255,255,255,.95);backdrop-filter:blur(6px);border-top:1px solid #eaecf0;padding:10px 0;z-index:30}
+.footer-contact__content{display:flex;justify-content:center;gap:14px}
+.icon-btn{width:46px;height:46px;border-radius:999px;border:1px solid #d0d5dd;background:#fff;display:flex;align-items:center;justify-content:center}
+.icon-btn svg{width:24px;height:24px;fill:#000}
