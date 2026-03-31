@@ -1,5 +1,4 @@
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-
 const ENTRY_CATEGORIES = {
   income: ['Salário', 'Freelancer', 'Comissão', 'Renda extra', 'Aluguel recebido', 'Outros'],
   expense: ['Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Impostos', 'Outros']
@@ -17,10 +16,12 @@ const defaultData = {
   dependentsIncomeProfile: 'none_work',
   schoolCosts: 0,
   hasInsurance: 'no',
-  insuranceCoverage: 0
+  coverageAbsence: 0,
+  coverageDisability: 0,
+  coverageCritical: 0
 };
-
-const state = { entries: [], onboardingDone: false };
+const HORIZONS = [1, 3, 6, 12, 24];
+const state = { entries: [] };
 
 const fields = {
   monthlyIncome: document.getElementById('monthlyIncome'),
@@ -34,7 +35,9 @@ const fields = {
   dependentsIncomeProfile: document.getElementById('dependentsIncomeProfile'),
   schoolCosts: document.getElementById('schoolCosts'),
   hasInsurance: document.getElementById('hasInsurance'),
-  insuranceCoverage: document.getElementById('insuranceCoverage'),
+  coverageAbsence: document.getElementById('coverageAbsence'),
+  coverageDisability: document.getElementById('coverageDisability'),
+  coverageCritical: document.getElementById('coverageCritical'),
   entryType: document.getElementById('entryType'),
   entryCategory: document.getElementById('entryCategory'),
   entryDescription: document.getElementById('entryDescription'),
@@ -46,7 +49,7 @@ const ui = {
   onboardingCard: document.getElementById('onboardingCard'),
   appContent: document.getElementById('appContent'),
   schoolCostsWrapper: document.getElementById('schoolCostsWrapper'),
-  coverageField: document.getElementById('coverageField'),
+  coverageFields: document.getElementById('coverageFields'),
   monthlyBalance: document.getElementById('monthlyBalance'),
   totalIncome: document.getElementById('totalIncome'),
   totalExpenses: document.getElementById('totalExpenses'),
@@ -70,12 +73,12 @@ const ui = {
   criticalGapLabel: document.getElementById('criticalGapLabel'),
   insuranceNeedSummary: document.getElementById('insuranceNeedSummary'),
   entriesList: document.getElementById('entriesList'),
-  projectionShort: document.getElementById('projectionShort'),
-  projectionMedium: document.getElementById('projectionMedium'),
-  projectionLong: document.getElementById('projectionLong'),
-  futureBarShort: document.getElementById('futureBarShort'),
-  futureBarMedium: document.getElementById('futureBarMedium'),
-  futureBarLong: document.getElementById('futureBarLong'),
+  cashflowCards: document.getElementById('cashflowCards'),
+  futureBar1: document.getElementById('futureBar1'),
+  futureBar3: document.getElementById('futureBar3'),
+  futureBar6: document.getElementById('futureBar6'),
+  futureBar12: document.getElementById('futureBar12'),
+  futureBar24: document.getElementById('futureBar24'),
   projectionNarrative: document.getElementById('projectionNarrative'),
   addEntryBtn: document.getElementById('addEntryBtn'),
   resetEntriesBtn: document.getElementById('resetEntriesBtn'),
@@ -92,334 +95,295 @@ const ui = {
   profileResult: document.getElementById('profileResult')
 };
 
-const numberValue = (input) => Number(input.value) || 0;
+function onlyDigits(v) { return String(v || '').replace(/\D/g, ''); }
+function formatMoneyFromDigits(digits) {
+  const n = Number(digits || 0) / 100;
+  return BRL.format(n);
+}
+function parseMoney(inputEl) {
+  const digits = onlyDigits(inputEl.value);
+  return Number(digits || 0) / 100;
+}
+function setMoneyValue(inputEl, amount) {
+  inputEl.value = BRL.format(Number(amount || 0));
+}
+
+function bindMoneyMasks() {
+  document.querySelectorAll('.money-input').forEach((input) => {
+    input.addEventListener('input', () => {
+      const digits = onlyDigits(input.value);
+      input.value = formatMoneyFromDigits(digits);
+      render();
+    });
+    if (!input.value) input.value = BRL.format(0);
+  });
+}
 
 function populateEntryCategories() {
   const type = fields.entryType.value;
-  const categories = ENTRY_CATEGORIES[type] || [];
-  fields.entryCategory.innerHTML = categories.map((c) => `<option value="${c}">${c}</option>`).join('');
+  fields.entryCategory.innerHTML = (ENTRY_CATEGORIES[type] || []).map((c) => `<option value="${c}">${c}</option>`).join('');
 }
 
 function getFormData() {
   return {
-    monthlyIncome: numberValue(fields.monthlyIncome),
-    extraIncome: numberValue(fields.extraIncome),
-    fixedCosts: numberValue(fields.fixedCosts),
-    variableCosts: numberValue(fields.variableCosts),
-    debts: numberValue(fields.debts),
-    investments: numberValue(fields.investments),
-    emergencyReserve: numberValue(fields.emergencyReserve),
-    dependentsCount: numberValue(fields.dependentsCount),
+    monthlyIncome: parseMoney(fields.monthlyIncome),
+    extraIncome: parseMoney(fields.extraIncome),
+    fixedCosts: parseMoney(fields.fixedCosts),
+    variableCosts: parseMoney(fields.variableCosts),
+    debts: parseMoney(fields.debts),
+    investments: parseMoney(fields.investments),
+    emergencyReserve: parseMoney(fields.emergencyReserve),
+    dependentsCount: Number(fields.dependentsCount.value) || 0,
     dependentsIncomeProfile: fields.dependentsIncomeProfile.value,
-    schoolCosts: numberValue(fields.schoolCosts),
+    schoolCosts: parseMoney(fields.schoolCosts),
     hasInsurance: fields.hasInsurance.value,
-    insuranceCoverage: numberValue(fields.insuranceCoverage)
+    coverageAbsence: parseMoney(fields.coverageAbsence),
+    coverageDisability: parseMoney(fields.coverageDisability),
+    coverageCritical: parseMoney(fields.coverageCritical)
   };
 }
 
 function calculateMetrics(data) {
   const totalIncome = data.monthlyIncome + data.extraIncome;
   const essentialExpenses = data.fixedCosts + data.variableCosts + data.debts + data.schoolCosts;
-  const freeAfterEssentials = totalIncome - essentialExpenses;
-  const monthlyBalance = freeAfterEssentials - data.investments;
+  const balanceBeforeInvest = totalIncome - essentialExpenses;
+  const monthlyBalance = balanceBeforeInvest - data.investments;
   const emergencyMonths = essentialExpenses > 0 ? data.emergencyReserve / essentialExpenses : 0;
   const budgetSlack = totalIncome > 0 ? (monthlyBalance / totalIncome) * 100 : 0;
   const commitment = totalIncome > 0 ? (essentialExpenses / totalIncome) * 100 : 0;
-
-  return { totalIncome, essentialExpenses, freeAfterEssentials, monthlyBalance, emergencyMonths, budgetSlack, commitment };
+  return { totalIncome, essentialExpenses, monthlyBalance, emergencyMonths, budgetSlack, commitment };
 }
 
-function healthStatus(metrics) {
-  if (metrics.monthlyBalance < 0 || metrics.emergencyMonths < 1) return { label: 'Crítica', className: 'status status--danger' };
-  if (metrics.budgetSlack < 10 || metrics.emergencyMonths < 3) return { label: 'Atenção', className: 'status status--warning' };
+function healthStatus(m) {
+  if (m.monthlyBalance < 0 || m.emergencyMonths < 1) return { label: 'Crítica', className: 'status status--danger' };
+  if (m.budgetSlack < 10 || m.emergencyMonths < 3) return { label: 'Atenção', className: 'status status--warning' };
   return { label: 'Saudável', className: 'status status--success' };
 }
 
-function renderBudgetAndLiquidity(metrics) {
-  const slack = Math.max(-30, Math.min(40, metrics.budgetSlack));
-  ui.budgetSlackFill.style.width = `${((slack + 30) / 70) * 100}%`;
-  ui.budgetSlackText.textContent = metrics.budgetSlack >= 20
-    ? `Folga muito boa (${metrics.budgetSlack.toFixed(1)}%).`
-    : metrics.budgetSlack >= 10
-      ? `Folga adequada (${metrics.budgetSlack.toFixed(1)}%).`
-      : metrics.budgetSlack >= 0
-        ? `Folga baixa (${metrics.budgetSlack.toFixed(1)}%).`
-        : `Sem folga orçamentária (${metrics.budgetSlack.toFixed(1)}%).`;
+function renderPrimaryCharts(data, m) {
+  ui.budgetSlackFill.style.width = `${Math.max(0, Math.min(100, ((m.budgetSlack + 30) / 70) * 100))}%`;
+  ui.budgetSlackText.textContent = `Folga orçamentária atual: ${m.budgetSlack.toFixed(1)}%.`;
 
-  const liquidityRatio = Math.max(0, Math.min(100, (metrics.emergencyMonths / 6) * 100));
-  ui.liquidityFill.style.width = `${liquidityRatio}%`;
-  ui.liquidityText.textContent = `Liquidez estimada: ${metrics.emergencyMonths.toFixed(1)} meses de despesas essenciais.`;
-}
+  ui.liquidityFill.style.width = `${Math.max(0, Math.min(100, (m.emergencyMonths / 6) * 100))}%`;
+  ui.liquidityText.textContent = `Liquidez: ${m.emergencyMonths.toFixed(1)} meses.`;
 
-function renderPie(metrics, data) {
-  const total = Math.max(metrics.totalIncome, 1);
-  const expensePct = Math.max(0, Math.min(100, (metrics.essentialExpenses / total) * 100));
-  const investPct = Math.max(0, Math.min(100 - expensePct, (data.investments / total) * 100));
-  const freePct = Math.max(0, 100 - expensePct - investPct);
-
-  ui.incomePie.style.background = `conic-gradient(#f08c2d 0 ${expensePct}%, #4f7cff ${expensePct}% ${expensePct + investPct}%, #55b67d ${expensePct + investPct}% 100%)`;
+  const total = Math.max(m.totalIncome, 1);
+  const expensesPct = Math.max(0, Math.min(100, (m.essentialExpenses / total) * 100));
+  const investPct = Math.max(0, Math.min(100 - expensesPct, (data.investments / total) * 100));
+  ui.incomePie.style.background = `conic-gradient(#f29a3c 0 ${expensesPct}%, #4f7cff ${expensesPct}% ${expensesPct + investPct}%, #33b27f ${expensesPct + investPct}% 100%)`;
 }
 
 function calculateInsuranceNeeds(data) {
-  const annualIncome = data.monthlyIncome * 12;
+  const annual = data.monthlyIncome * 12;
+  const depAdj = data.dependentsCount > 0 ? 1 + (data.dependentsIncomeProfile === 'none_work' ? 0.4 : data.dependentsIncomeProfile === 'some_work' ? 0.2 : 0.1) : 1;
   const schoolAnnual = data.schoolCosts * 12;
-
   return {
-    absenceNeed: annualIncome * 5 + schoolAnnual * 5,
-    disabilityNeed: annualIncome * 10 + schoolAnnual * 10,
-    criticalNeed: annualIncome * 2 + schoolAnnual * 2
+    absenceNeed: annual * 5 * depAdj + schoolAnnual * 5,
+    disabilityNeed: annual * 10 * depAdj + schoolAnnual * 10,
+    criticalNeed: annual * 2 * depAdj + schoolAnnual * 2
   };
 }
 
-function renderCoverageBar(bar, label, need, coverage) {
-  const pct = need > 0 ? Math.min(100, (coverage / need) * 100) : 0;
-  const gap = Math.max(0, need - coverage);
-  bar.style.width = `${pct}%`;
-  label.textContent = gap > 0 ? `${BRL.format(gap)} de diferença` : 'Cobertura suficiente pela referência';
+function renderCoverageBar(fill, label, need, current) {
+  const gap = Math.max(0, need - current);
+  const pct = need > 0 ? Math.min(100, (current / need) * 100) : 0;
+  fill.style.width = `${pct}%`;
+  label.textContent = gap > 0 ? `${BRL.format(gap)} de diferença` : 'Cobertura adequada pela referência';
 }
 
-function renderInsuranceNeeds(data) {
+function renderInsurance(data, m) {
   const needs = calculateInsuranceNeeds(data);
-  const coverage = data.hasInsurance === 'yes' ? data.insuranceCoverage : 0;
+  const hasInsurance = data.hasInsurance === 'yes';
 
-  renderCoverageBar(ui.absenceBar, ui.absenceGapLabel, needs.absenceNeed, coverage);
-  renderCoverageBar(ui.disabilityBar, ui.disabilityGapLabel, needs.disabilityNeed, coverage);
-  renderCoverageBar(ui.criticalBar, ui.criticalGapLabel, needs.criticalNeed, coverage);
+  renderCoverageBar(ui.absenceBar, ui.absenceGapLabel, needs.absenceNeed, hasInsurance ? data.coverageAbsence : 0);
+  renderCoverageBar(ui.disabilityBar, ui.disabilityGapLabel, needs.disabilityNeed, hasInsurance ? data.coverageDisability : 0);
+  renderCoverageBar(ui.criticalBar, ui.criticalGapLabel, needs.criticalNeed, hasInsurance ? data.coverageCritical : 0);
 
-  ui.insuranceNeedSummary.textContent = `Referências por renda anual: ausência 5x, invalidez 10x, doenças graves 2x. Cobertura atual considerada: ${BRL.format(coverage)}.`;
-}
-
-function buildInsights(data, metrics) {
-  const insights = [];
-  if (metrics.commitment > 80) insights.push('Seu comprometimento da renda com despesas essenciais está alto.');
-  else insights.push('Seu comprometimento de renda está em faixa administrável.');
-
-  insights.push(`Investimentos aparecem separados das despesas: aporte atual de ${BRL.format(data.investments)}.`);
-  insights.push(`Reserva atual cobre ${metrics.emergencyMonths.toFixed(1)} meses de despesas essenciais.`);
-
-  if (data.dependentsCount > 0 && data.schoolCosts <= 0) insights.push('Preencha custos escolares para refinar a análise com dependentes.');
-
-  return insights;
-}
-
-function renderProtection(data) {
-  if (data.hasInsurance === 'no') {
-    ui.protectionMessage.textContent = 'Sem seguro informado: use a pré-análise para entender referências de cobertura pela sua renda.';
-    ui.protectionCard.style.borderLeftColor = '#fdb022';
+  if (!hasInsurance) {
+    const urgency = Math.min(100, Math.max(40, 100 - m.emergencyMonths * 12 + m.commitment * 0.4));
+    ui.protectionMessage.textContent = `Você precisa de proteção. Prioridade de contratação no curtíssimo prazo: ${urgency.toFixed(0)} / 100.`;
+    ui.protectionCard.style.borderLeftColor = '#f59e0b';
     ui.protectionCta.classList.remove('hidden');
   } else {
-    ui.protectionMessage.textContent = `Cobertura atual informada: ${BRL.format(data.insuranceCoverage)}.`; 
+    ui.protectionMessage.textContent = 'Sua cobertura foi avaliada por tipo. Ajuste cada cobertura para acompanhar o nível recomendado.';
     ui.protectionCard.style.borderLeftColor = '#12b76a';
     ui.protectionCta.classList.add('hidden');
   }
+
+  ui.insuranceNeedSummary.textContent = `Referência: ausência 5x renda anual, invalidez 10x, doenças graves 2x (ajustada por dependentes/custos escolares).`;
 }
 
-function renderEntryList() {
-  if (state.entries.length === 0) {
-    ui.entriesList.innerHTML = '<li class="empty">Nenhuma movimentação adicionada ainda.</li>';
+function renderEntriesList() {
+  if (!state.entries.length) {
+    ui.entriesList.innerHTML = '<li class="empty">Nenhuma movimentação adicionada.</li>';
     return;
   }
 
-  ui.entriesList.innerHTML = state.entries.map((item, index) => `
+  ui.entriesList.innerHTML = state.entries.map((entry, i) => `
     <li class="entry-item">
-      <div>
-        <strong>${item.description}</strong>
-        <span class="entry-meta">${item.category} • ${item.type === 'income' ? 'Entrada' : 'Saída'} recorrente mensal</span>
-      </div>
-      <div class="entry-actions">
-        <strong class="${item.type}">${item.type === 'income' ? '+' : '-'} ${BRL.format(item.amount)}</strong>
-        <button class="entry-delete" data-index="${index}" type="button">Excluir</button>
-      </div>
-    </li>
-  `).join('');
+      <div><strong>${entry.description}</strong><span class="entry-meta">${entry.category} • ${entry.type === 'income' ? 'Entrada' : 'Saída'}</span></div>
+      <div class="entry-actions"><strong class="${entry.type}">${entry.type === 'income' ? '+' : '-'} ${BRL.format(entry.amount)}</strong><button type="button" class="entry-delete" data-index="${i}">Excluir</button></div>
+    </li>`).join('');
 
   ui.entriesList.querySelectorAll('.entry-delete').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const idx = Number(btn.dataset.index);
-      state.entries.splice(idx, 1);
+      state.entries.splice(Number(btn.dataset.index), 1);
       render();
     });
   });
 }
 
-function renderProjection(metrics, data) {
-  const entriesNet = state.entries.reduce((acc, item) => acc + (item.type === 'income' ? item.amount : -item.amount), 0);
-  const monthResult = metrics.monthlyBalance + entriesNet;
-
-  const short = data.emergencyReserve + monthResult * 3;
-  const medium = data.emergencyReserve + monthResult * 12;
-  const long = data.emergencyReserve + monthResult * 36;
-
-  ui.projectionShort.textContent = BRL.format(short);
-  ui.projectionMedium.textContent = BRL.format(medium);
-  ui.projectionLong.textContent = BRL.format(long);
-
-  const totalIncome = Math.max(metrics.totalIncome, 1);
-  const commitmentFuture = (reserveValue) => {
-    const pressure = Math.max(0, (metrics.essentialExpenses - Math.max(0, reserveValue / 12)) / totalIncome);
-    return Math.max(0, Math.min(100, pressure * 100));
-  };
-
-  ui.futureBarShort.style.width = `${commitmentFuture(short)}%`;
-  ui.futureBarMedium.style.width = `${commitmentFuture(medium)}%`;
-  ui.futureBarLong.style.width = `${commitmentFuture(long)}%`;
-
-  ui.projectionNarrative.textContent = monthResult >= 0
-    ? 'Com o ritmo atual, a tendência é de manutenção/crescimento da reserva ao longo do tempo.'
-    : 'Com o ritmo atual, existe tendência de redução da reserva e maior comprometimento futuro.';
+function projectionPressure(reserve, essential, income) {
+  const safe = Math.max(0, reserve / 12);
+  return Math.max(0, Math.min(100, ((essential - safe) / Math.max(1, income)) * 100));
 }
 
-function validateDependentFields() {
-  const hasDependents = numberValue(fields.dependentsCount) > 0;
-  ui.schoolCostsWrapper.classList.toggle('hidden', !hasDependents);
-  fields.schoolCosts.required = hasDependents;
+function renderCashflowProjection(data, m) {
+  const entriesNet = state.entries.reduce((acc, e) => acc + (e.type === 'income' ? e.amount : -e.amount), 0);
+  const monthFlow = m.monthlyBalance + entriesNet;
 
-  if (hasDependents && numberValue(fields.schoolCosts) <= 0) {
-    fields.schoolCosts.setCustomValidity('Preencha os custos escolares quando houver dependentes.');
+  const rows = HORIZONS.map((h) => {
+    const reserveProjected = data.emergencyReserve + monthFlow * h;
+    const pressure = projectionPressure(reserveProjected, m.essentialExpenses, m.totalIncome);
+    return { h, reserveProjected, pressure };
+  });
+
+  ui.cashflowCards.innerHTML = rows.map((r) => `<div class="projection-card"><p>${r.h} ${r.h === 1 ? 'mês' : 'meses'}</p><strong>${BRL.format(r.reserveProjected)}</strong></div>`).join('');
+  ui.futureBar1.style.width = `${rows[0].pressure}%`;
+  ui.futureBar3.style.width = `${rows[1].pressure}%`;
+  ui.futureBar6.style.width = `${rows[2].pressure}%`;
+  ui.futureBar12.style.width = `${rows[3].pressure}%`;
+  ui.futureBar24.style.width = `${rows[4].pressure}%`;
+
+  ui.projectionNarrative.textContent = `Cálculo: reserva projetada = reserva atual + (saldo livre mensal + lançamentos) x horizonte. Pressão = relação entre despesas essenciais e capacidade financeira projetada.`;
+}
+
+function validateDependentFields(data) {
+  const hasDeps = data.dependentsCount > 0;
+  ui.schoolCostsWrapper.classList.toggle('hidden', !hasDeps);
+  fields.schoolCosts.required = hasDeps;
+  if (hasDeps && data.schoolCosts <= 0) {
+    fields.schoolCosts.setCustomValidity('Informe os custos escolares para dependentes.');
   } else {
     fields.schoolCosts.setCustomValidity('');
   }
 }
 
+function buildInsights(data, m) {
+  const insights = [
+    `Comprometimento atual de renda com despesas essenciais: ${m.commitment.toFixed(1)}%.`,
+    `Investimentos são exibidos separadamente: ${BRL.format(data.investments)} por mês.`
+  ];
+  if (data.hasInsurance === 'no') insights.push('Sem seguro ativo: prioridade em estruturar proteção mínima por cobertura.');
+  return insights;
+}
+
 function render() {
   const data = getFormData();
-  validateDependentFields();
-  ui.coverageField.classList.toggle('hidden', data.hasInsurance !== 'yes');
-  if (!document.getElementById('financeForm').checkValidity()) return;
+  validateDependentFields(data);
+  ui.coverageFields.classList.toggle('hidden', data.hasInsurance !== 'yes');
+  const form = document.getElementById('financeForm');
+  if (form && !form.checkValidity()) return;
 
-  const metrics = calculateMetrics(data);
-  const health = healthStatus(metrics);
+  const m = calculateMetrics(data);
+  const health = healthStatus(m);
 
-  ui.totalIncome.textContent = BRL.format(metrics.totalIncome);
-  ui.totalExpenses.textContent = BRL.format(metrics.essentialExpenses);
+  ui.totalIncome.textContent = BRL.format(m.totalIncome);
+  ui.totalExpenses.textContent = BRL.format(m.essentialExpenses);
   ui.investingValue.textContent = BRL.format(data.investments);
-  ui.monthlyBalance.textContent = BRL.format(metrics.monthlyBalance);
-  ui.emergencyMonths.textContent = metrics.emergencyMonths.toFixed(1);
+  ui.monthlyBalance.textContent = BRL.format(m.monthlyBalance);
+  ui.emergencyMonths.textContent = m.emergencyMonths.toFixed(1);
   ui.healthIndicator.className = health.className;
   ui.healthIndicator.textContent = health.label;
 
-  renderBudgetAndLiquidity(metrics);
-  renderPie(metrics, data);
-  ui.insightsList.innerHTML = buildInsights(data, metrics).map((item) => `<li>${item}</li>`).join('');
-  renderProtection(data);
-  renderInsuranceNeeds(data);
-  renderEntryList();
-  renderProjection(metrics, data);
+  renderPrimaryCharts(data, m);
+  renderInsurance(data, m);
+  ui.insightsList.innerHTML = buildInsights(data, m).map((i) => `<li>${i}</li>`).join('');
+  renderEntriesList();
+  renderCashflowProjection(data, m);
 }
 
 function addEntry() {
+  const amount = parseMoney(fields.entryAmount);
   const description = fields.entryDescription.value.trim();
-  const amount = numberValue(fields.entryAmount);
-  if (!description || amount <= 0) {
-    alert('Informe descrição e valor maior que zero para adicionar a movimentação.');
-    return;
-  }
-
-  state.entries.unshift({ description, amount, type: fields.entryType.value, category: fields.entryCategory.value });
+  if (!description || amount <= 0) return alert('Preencha descrição e valor válido.');
+  state.entries.unshift({
+    type: fields.entryType.value,
+    category: fields.entryCategory.value,
+    description,
+    amount
+  });
+  setMoneyValue(fields.entryAmount, 0);
   fields.entryDescription.value = '';
-  fields.entryAmount.value = '';
   render();
 }
 
 function setupTabs() {
-  ui.tabButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      ui.tabButtons.forEach((btn) => btn.classList.remove('active'));
-      button.classList.add('active');
-      const target = button.dataset.tab;
-      ui.tabPanels.forEach((panel) => panel.classList.toggle('active', panel.id === target));
-    });
-  });
+  ui.tabButtons.forEach((b) => b.addEventListener('click', () => {
+    ui.tabButtons.forEach((btn) => btn.classList.remove('active'));
+    b.classList.add('active');
+    ui.tabPanels.forEach((p) => p.classList.toggle('active', p.id === b.dataset.tab));
+  }));
 }
 
-function calculateProfile() {
+function profileFromOnboarding() {
   let score = 0;
-  if (ui.qControl.value === 'high') score += 2;
-  if (ui.qControl.value === 'mid') score += 1;
-  if (ui.qBudget.value === 'high') score += 2;
-  if (ui.qBudget.value === 'mid') score += 1;
-
+  score += ui.qControl.value === 'high' ? 2 : ui.qControl.value === 'mid' ? 1 : 0;
+  score += ui.qBudget.value === 'high' ? 2 : ui.qBudget.value === 'mid' ? 1 : 0;
   if (score <= 1) return 'Iniciante';
   if (score <= 3) return 'Moderado';
   return 'Avançado';
 }
 
-function applyOnboardingData() {
-  const dependents = numberValue(ui.qDependents);
-  const schoolCosts = numberValue(ui.qSchoolCosts);
+function applyOnboarding() {
+  const deps = Number(ui.qDependents.value) || 0;
+  const school = parseMoney(ui.qSchoolCosts);
+  if (deps > 0 && school <= 0) return alert('Para dependentes, informe custos escolares.'), false;
 
-  if (dependents > 0 && schoolCosts <= 0) {
-    alert('Para quem tem dependentes, o campo de custos escolares é obrigatório.');
-    return false;
-  }
-
-  fields.monthlyIncome.value = numberValue(ui.qIncome);
-  fields.fixedCosts.value = numberValue(ui.qFixedCosts);
-  fields.dependentsCount.value = dependents;
-  fields.schoolCosts.value = schoolCosts;
-
-  const profile = calculateProfile();
-  ui.profileResult.textContent = `Perfil identificado: ${profile}. Você pode ajustar os valores no painel principal.`;
+  setMoneyValue(fields.monthlyIncome, parseMoney(ui.qIncome));
+  setMoneyValue(fields.fixedCosts, parseMoney(ui.qFixedCosts));
+  fields.dependentsCount.value = deps;
+  setMoneyValue(fields.schoolCosts, school);
+  ui.profileResult.textContent = `Perfil identificado: ${profileFromOnboarding()}.`;
   return true;
 }
 
 async function init() {
-  Object.entries(defaultData).forEach(([key, value]) => {
-    if (fields[key]) fields[key].value = value;
-  });
-
-  ui.qIncome.value = defaultData.monthlyIncome;
-  ui.qFixedCosts.value = defaultData.fixedCosts;
-  ui.qDependents.value = defaultData.dependentsCount;
-
-  populateEntryCategories();
   await fetch('/api/config');
+
+  Object.entries(defaultData).forEach(([k, v]) => {
+    if (!fields[k]) return;
+    if (typeof v === 'number' && fields[k].classList.contains('money-input')) setMoneyValue(fields[k], v);
+    else fields[k].value = v;
+  });
+  setMoneyValue(ui.qIncome, defaultData.monthlyIncome);
+  setMoneyValue(ui.qFixedCosts, defaultData.fixedCosts);
+  setMoneyValue(ui.qSchoolCosts, 0);
+
+  bindMoneyMasks();
+  populateEntryCategories();
 
   ui.loadingState.classList.add('hidden');
   ui.onboardingCard.classList.remove('hidden');
 
-  ui.qDependents.addEventListener('input', () => {
-    ui.qSchoolCostsWrapper.classList.toggle('hidden', numberValue(ui.qDependents) === 0);
-  });
-
+  ui.qDependents.addEventListener('input', () => ui.qSchoolCostsWrapper.classList.toggle('hidden', (Number(ui.qDependents.value) || 0) === 0));
   ui.startExperienceBtn.addEventListener('click', () => {
-    if (!applyOnboardingData()) return;
-
-    state.onboardingDone = true;
+    if (!applyOnboarding()) return;
     ui.onboardingCard.classList.add('hidden');
     ui.appContent.classList.remove('hidden');
     setupTabs();
     render();
   });
 
-  [
-    fields.monthlyIncome,
-    fields.extraIncome,
-    fields.fixedCosts,
-    fields.variableCosts,
-    fields.debts,
-    fields.investments,
-    fields.emergencyReserve,
-    fields.dependentsCount,
-    fields.dependentsIncomeProfile,
-    fields.schoolCosts,
-    fields.hasInsurance,
-    fields.insuranceCoverage
-  ].forEach((field) => {
-    field.addEventListener('input', render);
-    field.addEventListener('change', render);
-  });
-
   fields.entryType.addEventListener('change', populateEntryCategories);
-  ui.addEntryBtn.addEventListener('click', addEntry);
-  ui.resetEntriesBtn.addEventListener('click', () => {
-    state.entries = [];
-    render();
+  [fields.dependentsCount, fields.dependentsIncomeProfile, fields.hasInsurance].forEach((f) => {
+    f.addEventListener('input', render);
+    f.addEventListener('change', render);
   });
 
-  ui.protectionCta.addEventListener('click', () => {
-    alert('Podemos explorar estratégias de proteção adequadas ao seu momento, com foco educativo e sem compromisso.');
-  });
+  ui.addEntryBtn.addEventListener('click', addEntry);
+  ui.resetEntriesBtn.addEventListener('click', () => { state.entries = []; render(); });
+  ui.protectionCta.addEventListener('click', () => window.open('https://wa.me/5511995488859', '_blank'));
 }
 
 init();

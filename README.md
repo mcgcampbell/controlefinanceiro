@@ -1,42 +1,29 @@
 # Controle Financeiro Pessoal (MVP)
 
-Aplicação web **mobile-first** para organização financeira, com linguagem simples e conexão educativa com proteção financeira.
+## Atualizações desta iteração
 
-## O que foi evoluído nesta versão
+- Dashboard da direita agora com comportamento **sticky** (fica fixo no topo durante scroll).
+- Seguro analisado por **cobertura individual**:
+  - ausência (5 anos de renda anual)
+  - invalidez (10 anos)
+  - doenças graves (2 anos)
+- Para usuários sem seguro: cálculo de **prioridade imediata** de proteção com base em despesas, reserva e comprometimento.
+- Fluxo de entradas/saídas com projeções de cash flow em **1, 3, 6, 12 e 24 meses**.
+- Explicação explícita da fórmula de projeção no próprio dashboard.
+- Inputs monetários com máscara em tempo real (R$, milhar e centavos).
+- Botões de contato:
+  - Instagram: `@matheus_campbell`
+  - WhatsApp: `wa.me/5511995488859`
 
-- **Questionário inicial obrigatório** para novos usuários, com classificação de perfil financeiro (iniciante, moderado, avançado).
-- **Dependentes com campo obrigatório de custos escolares** (quando houver dependentes), para refinar análise de despesas.
-- **Seguro de vida por múltiplos da renda anual**:
-  - ausência: 5 anos
-  - invalidez total/parcial: 10 anos
-  - doenças graves: 2 anos
-- **Mais gráficos visuais**:
-  - barras de folga orçamentária e liquidez
-  - gráfico de pizza (despesas essenciais x investimentos x folga)
-  - barras de comprometimento futuro (3/12/36 meses)
-- **Lançamentos aprimorados**:
-  - categorias em dropdown por tipo (entrada/saída)
-  - exclusão individual de lançamento
-  - reset em massa dos lançamentos
+## Stack
+- Node.js + Express
+- HTML, CSS, JavaScript (vanilla)
 
-## Arquitetura
-
-- Backend: Node.js + Express (`server.js`)
-- Frontend: HTML + CSS + JS vanilla (`public/`)
-- Endpoints:
-  - `GET /api/config`
-  - `POST /api/analyze`
-
-## Como rodar
+## Rodar localmente
 
 ```bash
 npm install
 npm start
 ```
 
-Abra: `http://localhost:3000`
-
-## Observações
-
-- MVP sem autenticação por foco em validação de usabilidade.
-- A análise de seguro é educativa e não substitui planejamento técnico individual.
+Abra `http://localhost:3000`
