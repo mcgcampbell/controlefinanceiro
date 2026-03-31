@@ -1,0 +1,20 @@
+{
+  "name": "controlefinanceiro",
+  "version": "1.0.0",
+  "description": "MVP de controle financeiro pessoal com foco em clareza e proteção financeira",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "financas",
+    "mvp",
+    "educacao-financeira"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
