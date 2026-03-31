@@ -8,7 +8,8 @@ Este MVP foi desenhado para:
 - funcionar como presente para clientes e isca digital;
 - reduzir fricção para usuários iniciantes;
 - transformar dados básicos em clareza financeira imediata;
-- permitir registro de entradas/saídas para simular impactos financeiros no curto, médio e longo prazo;
+- permitir registro de entradas/saídas por categoria para simular impactos financeiros no curto, médio e longo prazo;
+- oferecer pré-análise visual de seguro de vida para ausência, invalidez e doença grave;
 - abrir diálogo natural sobre proteção financeira, sem tom comercial agressivo.
 
 ## Arquitetura recomendada
@@ -23,38 +24,19 @@ Este MVP foi desenhado para:
 - `public/css/styles.css`: visual premium com estética glass + gradientes quentes
 - `public/js/app.js`: estado da UI, cálculos, indicadores, insights e projeções
 
-## Estrutura de pastas
-
-```bash
-.
-├── package.json
-├── server.js
-├── README.md
-└── public
-    ├── index.html
-    ├── css
-    │   └── styles.css
-    └── js
-        └── app.js
-```
-
 ## Fluxo de telas (MVP)
 
 1. **Landing page**
-   - Headline forte
-   - Benefícios
-   - CTA “Começar agora”
 2. **Aba: Visão Geral**
-   - Formulário essencial
-   - Cards de indicadores em tempo real
-   - Insights automáticos
-   - Módulo de proteção financeira
+   - formulário essencial
+   - saúde financeira + medidor de folga orçamentária
+   - insights automáticos
+   - módulo de proteção
+   - pré-análise visual de seguro de vida
 3. **Aba: Entradas & Saídas**
-   - Cadastro simplificado de movimentações
-   - Lista de lançamentos
-   - Projeção de impacto no curto/médio/longo prazo
-4. **Estado inicial**
-   - Loading curto + dados mockados
+   - cadastro de movimentações com tipo e categoria (dropdown)
+   - lista de lançamentos
+   - projeção no curto/médio/longo prazo
 
 ## Como rodar localmente
 
@@ -70,16 +52,8 @@ Abra: `http://localhost:3000`
 - `GET /api/config` → configuração inicial (mock)
 - `POST /api/analyze` → retorna cálculos financeiros básicos
 
-## Evolução planejada (próximos passos)
-
-- Ativar **Modo Avançado** em rota/seção dedicada
-- Persistência com banco de dados (ex.: PostgreSQL)
-- Relatórios comparativos mensais com histórico real
-- Captura de lead (opt-in) com consentimento LGPD
-- Conteúdo educativo contextual (microcards)
-- Integração opcional com CRM
-
 ## Observações de produto
 
 - Não há autenticação nesta versão por decisão de validação de UX.
 - O conteúdo evita linguagem alarmista e não promete resultados financeiros.
+- A pré-análise de seguro é **educativa** e não substitui análise técnica individual.

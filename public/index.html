@@ -70,6 +70,16 @@
                 <label>Investimentos (mensal) <input type="number" id="investments" min="0" step="0.01" /></label>
                 <label>Reserva de emergência <input type="number" id="emergencyReserve" min="0" step="0.01" /></label>
 
+                <label>Quantidade de dependentes <input type="number" id="dependentsCount" min="0" step="1" /></label>
+                <label>
+                  Situação de renda dos dependentes
+                  <select id="dependentsIncomeProfile">
+                    <option value="none_work">Dependentes não trabalham</option>
+                    <option value="some_work">Parte trabalha</option>
+                    <option value="all_work">Dependentes trabalham</option>
+                  </select>
+                </label>
+
                 <label>
                   Possui seguro de vida?
                   <select id="hasInsurance">
@@ -93,6 +103,14 @@
                 </div>
 
                 <article class="card glass">
+                  <h3>Folga orçamentária</h3>
+                  <div class="meter">
+                    <div id="budgetSlackFill" class="meter__fill"></div>
+                  </div>
+                  <p id="budgetSlackText" class="small">Preencha os dados para visualizar sua folga orçamentária.</p>
+                </article>
+
+                <article class="card glass">
                   <h3>Insights automáticos</h3>
                   <ul id="insightsList" class="insights">
                     <li>Preencha seus dados para receber recomendações personalizadas.</li>
@@ -103,6 +121,35 @@
                   <h3>Base de proteção financeira</h3>
                   <p id="protectionMessage">Informe se possui seguro para conectar proteção ao seu planejamento.</p>
                   <button type="button" id="protectionCta" class="btn btn--secondary hidden">Entender minha proteção</button>
+                </article>
+
+                <article class="card glass">
+                  <h3>Pré-análise de necessidade de seguro</h3>
+                  <p class="small">Estimativa educativa para cenários de ausência, invalidez e doença grave.</p>
+                  <div class="coverage-lines">
+                    <div class="coverage-line">
+                      <div class="coverage-line__header">
+                        <span>Ausência</span>
+                        <strong id="absenceGapLabel">R$ 0,00 de diferença</strong>
+                      </div>
+                      <div class="bar"><div id="absenceBar" class="bar__fill"></div></div>
+                    </div>
+                    <div class="coverage-line">
+                      <div class="coverage-line__header">
+                        <span>Invalidez</span>
+                        <strong id="disabilityGapLabel">R$ 0,00 de diferença</strong>
+                      </div>
+                      <div class="bar"><div id="disabilityBar" class="bar__fill"></div></div>
+                    </div>
+                    <div class="coverage-line">
+                      <div class="coverage-line__header">
+                        <span>Doença grave</span>
+                        <strong id="criticalGapLabel">R$ 0,00 de diferença</strong>
+                      </div>
+                      <div class="bar"><div id="criticalBar" class="bar__fill"></div></div>
+                    </div>
+                  </div>
+                  <p id="insuranceNeedSummary" class="small"></p>
                 </article>
               </section>
             </div>
@@ -118,6 +165,10 @@
                     <option value="income">Entrada</option>
                     <option value="expense">Saída</option>
                   </select>
+                </label>
+                <label>
+                  Categoria
+                  <select id="entryCategory"></select>
                 </label>
                 <label>Descrição <input type="text" id="entryDescription" placeholder="Ex.: Freelancer, mercado, transporte" /></label>
                 <label>Valor (R$) <input type="number" id="entryAmount" min="0" step="0.01" /></label>
