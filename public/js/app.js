@@ -1,389 +1,404 @@
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const ENTRY_CATEGORIES = {
-  income: ['Salário', 'Freelancer', 'Comissão', 'Renda extra', 'Aluguel recebido', 'Outros'],
-  expense: ['Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Impostos', 'Outros']
+  income: ['Salário', 'Freelancer', 'Extras'],
+  essential: ['Moradia', 'Alimentação', 'Saúde', 'Transporte'],
+  discretionary: ['Lazer', 'Viagens', 'Compras'],
+  contribution: ['Investimentos', 'Reserva', 'Aporte extra']
 };
 
-const defaultData = {
-  monthlyIncome: 6500,
-  extraIncome: 500,
-  fixedCosts: 2600,
-  variableCosts: 1200,
-  debts: 600,
-  investments: 700,
-  emergencyReserve: 9000,
-  dependentsCount: 0,
-  dependentsIncomeProfile: 'none_work',
-  schoolCosts: 0,
-  hasInsurance: 'no',
-  coverageAbsence: 0,
-  coverageDisability: 0,
-  coverageCritical: 0
-};
-const HORIZONS = [1, 3, 6, 12, 24];
-const state = { entries: [] };
+const state = { step: 1, entries: [], onboarded: false };
 
-const fields = {
-  monthlyIncome: document.getElementById('monthlyIncome'),
-  extraIncome: document.getElementById('extraIncome'),
-  fixedCosts: document.getElementById('fixedCosts'),
-  variableCosts: document.getElementById('variableCosts'),
-  debts: document.getElementById('debts'),
-  investments: document.getElementById('investments'),
-  emergencyReserve: document.getElementById('emergencyReserve'),
-  dependentsCount: document.getElementById('dependentsCount'),
-  dependentsIncomeProfile: document.getElementById('dependentsIncomeProfile'),
-  schoolCosts: document.getElementById('schoolCosts'),
-  hasInsurance: document.getElementById('hasInsurance'),
-  coverageAbsence: document.getElementById('coverageAbsence'),
-  coverageDisability: document.getElementById('coverageDisability'),
-  coverageCritical: document.getElementById('coverageCritical'),
-  entryType: document.getElementById('entryType'),
-  entryCategory: document.getElementById('entryCategory'),
-  entryDescription: document.getElementById('entryDescription'),
-  entryAmount: document.getElementById('entryAmount')
-};
+const EMERGENCY_REFERENCES = [
+  { item: 'Troca de óleo + filtro', cost: 325, source: 'Seu Carro Usado (2025)', url: 'https://seucarrousado.com.br/revisao-de-carro-usado-quanto-custa-e-o-que-verificar-em-2025' },
+  { item: 'Correia dentada + mão de obra', cost: 1800, source: 'Seu Carro Usado (2025)', url: 'https://seucarrousado.com.br/revisao-de-carro-usado-quanto-custa-e-o-que-verificar-em-2025' },
+  { item: 'Revisões iniciais carro popular (3 revisões)', cost: 2000, source: 'CNN Brasil Auto (2025)', url: 'https://www.cnnbrasil.com.br/auto/confira-o-valor-da-revisao-dos-10-carros-mais-vendidos-do-brasil/' },
+  { item: 'Diária UTI adulto (SUS)', cost: 650, source: 'Ministério da Saúde (2022)', url: 'https://www.gov.br/saude/pt-br/assuntos/noticias/2022/janeiro/ministerio-da-saude-aumenta-valor-para-custeio-de-utis' },
+  { item: 'Diária UTI referência de mercado (histórica)', cost: 1330.66, source: 'Unimed PTU A500 (2018-2019)', url: 'https://s3.amazonaws.com/us.inevent.files.general/570e0a5dd72282bb4d5729f2cf33ee4157d6aa0b.pdf' }
+];
 
+const el = (id) => document.getElementById(id);
 const ui = {
-  loadingState: document.getElementById('loadingState'),
-  onboardingCard: document.getElementById('onboardingCard'),
-  appContent: document.getElementById('appContent'),
-  schoolCostsWrapper: document.getElementById('schoolCostsWrapper'),
-  coverageFields: document.getElementById('coverageFields'),
-  monthlyBalance: document.getElementById('monthlyBalance'),
-  totalIncome: document.getElementById('totalIncome'),
-  totalExpenses: document.getElementById('totalExpenses'),
-  investingValue: document.getElementById('investingValue'),
-  emergencyMonths: document.getElementById('emergencyMonths'),
-  healthIndicator: document.getElementById('healthIndicator'),
-  budgetSlackFill: document.getElementById('budgetSlackFill'),
-  budgetSlackText: document.getElementById('budgetSlackText'),
-  liquidityFill: document.getElementById('liquidityFill'),
-  liquidityText: document.getElementById('liquidityText'),
-  incomePie: document.getElementById('incomePie'),
-  insightsList: document.getElementById('insightsList'),
-  protectionCard: document.getElementById('protectionCard'),
-  protectionMessage: document.getElementById('protectionMessage'),
-  protectionCta: document.getElementById('protectionCta'),
-  absenceBar: document.getElementById('absenceBar'),
-  disabilityBar: document.getElementById('disabilityBar'),
-  criticalBar: document.getElementById('criticalBar'),
-  absenceGapLabel: document.getElementById('absenceGapLabel'),
-  disabilityGapLabel: document.getElementById('disabilityGapLabel'),
-  criticalGapLabel: document.getElementById('criticalGapLabel'),
-  insuranceNeedSummary: document.getElementById('insuranceNeedSummary'),
-  entriesList: document.getElementById('entriesList'),
-  cashflowCards: document.getElementById('cashflowCards'),
-  futureBar1: document.getElementById('futureBar1'),
-  futureBar3: document.getElementById('futureBar3'),
-  futureBar6: document.getElementById('futureBar6'),
-  futureBar12: document.getElementById('futureBar12'),
-  futureBar24: document.getElementById('futureBar24'),
-  projectionNarrative: document.getElementById('projectionNarrative'),
-  addEntryBtn: document.getElementById('addEntryBtn'),
-  resetEntriesBtn: document.getElementById('resetEntriesBtn'),
-  tabButtons: document.querySelectorAll('.tab-btn'),
-  tabPanels: document.querySelectorAll('.tab-panel'),
-  qControl: document.getElementById('qControl'),
-  qBudget: document.getElementById('qBudget'),
-  qIncome: document.getElementById('qIncome'),
-  qFixedCosts: document.getElementById('qFixedCosts'),
-  qDependents: document.getElementById('qDependents'),
-  qSchoolCostsWrapper: document.getElementById('qSchoolCostsWrapper'),
-  qSchoolCosts: document.getElementById('qSchoolCosts'),
-  startExperienceBtn: document.getElementById('startExperienceBtn'),
-  profileResult: document.getElementById('profileResult')
+  loading: el('loadingState'),
+  onboarding: el('onboarding'),
+  panel: el('panel'),
+  steps: [...document.querySelectorAll('.step')],
+  stepPanels: [el('step1'), el('step2'), el('step3')],
+  prevStep: el('prevStep'),
+  nextStep: el('nextStep'),
+  finishOnboarding: el('finishOnboarding'),
+  qTrack: el('qTrack'),
+  qNever: el('qNever'),
+  qSometimes: el('qSometimes'),
+  qOften: el('qOften'),
+  qDependents: el('qDependents'),
+  qSchoolWrap: el('qSchoolWrap'),
+  qSchool: el('qSchool'),
+  qIncome: el('qIncome'),
+  qFixed: el('qFixed'),
+  qVariable: el('qVariable'),
+  qReserve: el('qReserve'),
+  qHasInsurance: el('qHasInsurance'),
+  profileResult: el('profileResult'),
+  onboardingSummary: el('onboardingSummary'),
+  toggleMethodology: el('toggleMethodology'),
+  methodology: el('methodology'),
+  monthlyIncome: el('monthlyIncome'),
+  fixedCosts: el('fixedCosts'),
+  otherIncome: el('otherIncome'),
+  variableCosts: el('variableCosts'),
+  debts: el('debts'),
+  insuranceCost: el('insuranceCost'),
+  investments: el('investments'),
+  emergencyReserve: el('emergencyReserve'),
+  dependentsCount: el('dependentsCount'),
+  schoolCosts: el('schoolCosts'),
+  schoolCostsWrap: el('schoolCostsWrap'),
+  hasInsurance: el('hasInsurance'),
+  coverageWrap: el('coverageWrap'),
+  coverageAbsence: el('coverageAbsence'),
+  coverageDisability: el('coverageDisability'),
+  coverageCritical: el('coverageCritical'),
+  insuranceText: el('insuranceText'),
+  mBalance: el('mBalance'),
+  mReserveMonths: el('mReserveMonths'),
+  mCommitment: el('mCommitment'),
+  mRuin: el('mRuin'),
+  barSlack: el('barSlack'),
+  barLiquidity: el('barLiquidity'),
+  priorityList: el('priorityList'),
+  entryType: el('entryType'),
+  entryCategory: el('entryCategory'),
+  entryDescription: el('entryDescription'),
+  entryAmount: el('entryAmount'),
+  entryFrequency: el('entryFrequency'),
+  addEntry: el('addEntry'),
+  resetEntries: el('resetEntries'),
+  entryList: el('entryList'),
+  scenarioGrid: el('scenarioGrid'),
+  summaryBars: el('summaryBars'),
+  listIncome: el('listIncome'),
+  listEssential: el('listEssential'),
+  listDiscretionary: el('listDiscretionary'),
+  listInvest: el('listInvest'),
+  listProtection: el('listProtection'),
+  cutSuggestions: el('cutSuggestions'),
+  emergencyExamples: el('emergencyExamples')
 };
 
-function onlyDigits(v) { return String(v || '').replace(/\D/g, ''); }
-function formatMoneyFromDigits(digits) {
-  const n = Number(digits || 0) / 100;
-  return BRL.format(n);
-}
-function parseMoney(inputEl) {
-  const digits = onlyDigits(inputEl.value);
-  return Number(digits || 0) / 100;
-}
-function setMoneyValue(inputEl, amount) {
-  inputEl.value = BRL.format(Number(amount || 0));
-}
+const moneyInputs = [...document.querySelectorAll('.money-input')];
+
+const digitsOnly = (v) => String(v || '').replace(/\D/g, '');
+const formatDigitsToMoney = (d) => BRL.format((Number(d || 0)) / 100);
+const parseMoney = (input) => (Number(digitsOnly(input.value || 0)) / 100);
+const setMoney = (input, value = 0) => { input.value = BRL.format(value); };
 
 function bindMoneyMasks() {
-  document.querySelectorAll('.money-input').forEach((input) => {
+  moneyInputs.forEach((input) => {
+    input.value = BRL.format(0);
     input.addEventListener('input', () => {
-      const digits = onlyDigits(input.value);
-      input.value = formatMoneyFromDigits(digits);
-      render();
+      input.value = formatDigitsToMoney(digitsOnly(input.value));
+      if (state.onboarded) renderDashboard();
     });
-    if (!input.value) input.value = BRL.format(0);
   });
 }
 
-function populateEntryCategories() {
-  const type = fields.entryType.value;
-  fields.entryCategory.innerHTML = (ENTRY_CATEGORIES[type] || []).map((c) => `<option value="${c}">${c}</option>`).join('');
+function updateFollowup() {
+  const v = ui.qTrack.value;
+  ui.qNever.classList.toggle('hidden', v !== 'never');
+  ui.qSometimes.classList.toggle('hidden', v !== 'sometimes');
+  ui.qOften.classList.toggle('hidden', v !== 'often');
 }
 
-function getFormData() {
+function goToStep(step) {
+  state.step = Math.max(1, Math.min(3, step));
+  ui.steps.forEach((s, i) => s.classList.toggle('active', i + 1 === state.step));
+  ui.stepPanels.forEach((p, i) => p.classList.toggle('active', i + 1 === state.step));
+  ui.prevStep.classList.toggle('hidden', state.step === 1);
+  ui.nextStep.classList.toggle('hidden', state.step === 3);
+  ui.finishOnboarding.classList.toggle('hidden', state.step !== 3);
+}
+
+function getData() {
   return {
-    monthlyIncome: parseMoney(fields.monthlyIncome),
-    extraIncome: parseMoney(fields.extraIncome),
-    fixedCosts: parseMoney(fields.fixedCosts),
-    variableCosts: parseMoney(fields.variableCosts),
-    debts: parseMoney(fields.debts),
-    investments: parseMoney(fields.investments),
-    emergencyReserve: parseMoney(fields.emergencyReserve),
-    dependentsCount: Number(fields.dependentsCount.value) || 0,
-    dependentsIncomeProfile: fields.dependentsIncomeProfile.value,
-    schoolCosts: parseMoney(fields.schoolCosts),
-    hasInsurance: fields.hasInsurance.value,
-    coverageAbsence: parseMoney(fields.coverageAbsence),
-    coverageDisability: parseMoney(fields.coverageDisability),
-    coverageCritical: parseMoney(fields.coverageCritical)
+    income: parseMoney(ui.monthlyIncome),
+    otherIncome: parseMoney(ui.otherIncome),
+    fixed: parseMoney(ui.fixedCosts),
+    variable: parseMoney(ui.variableCosts),
+    debts: parseMoney(ui.debts),
+    insuranceCost: parseMoney(ui.insuranceCost),
+    investments: parseMoney(ui.investments),
+    reserve: parseMoney(ui.emergencyReserve),
+    dependents: Number(ui.dependentsCount.value) || 0,
+    school: parseMoney(ui.schoolCosts),
+    hasInsurance: ui.hasInsurance.value,
+    covAbs: parseMoney(ui.coverageAbsence),
+    covDis: parseMoney(ui.coverageDisability),
+    covCrit: parseMoney(ui.coverageCritical)
   };
 }
 
-function calculateMetrics(data) {
-  const totalIncome = data.monthlyIncome + data.extraIncome;
-  const essentialExpenses = data.fixedCosts + data.variableCosts + data.debts + data.schoolCosts;
-  const balanceBeforeInvest = totalIncome - essentialExpenses;
-  const monthlyBalance = balanceBeforeInvest - data.investments;
-  const emergencyMonths = essentialExpenses > 0 ? data.emergencyReserve / essentialExpenses : 0;
-  const budgetSlack = totalIncome > 0 ? (monthlyBalance / totalIncome) * 100 : 0;
-  const commitment = totalIncome > 0 ? (essentialExpenses / totalIncome) * 100 : 0;
-  return { totalIncome, essentialExpenses, monthlyBalance, emergencyMonths, budgetSlack, commitment };
+function calculate(data) {
+  const totalIncome = data.income + data.otherIncome;
+  const essential = data.fixed + data.variable + data.debts + data.school + data.insuranceCost;
+  const balance = totalIncome - essential - data.investments;
+  const reserveMonths = essential > 0 ? data.reserve / essential : 0;
+  const commitment = totalIncome > 0 ? (essential / totalIncome) * 100 : 0;
+  const ruinRisk = Math.min(100, Math.max(0, (3 - reserveMonths) * 25 + (commitment - 60) * 1.2));
+  return { totalIncome, essential, balance, reserveMonths, commitment, ruinRisk };
 }
 
-function healthStatus(m) {
-  if (m.monthlyBalance < 0 || m.emergencyMonths < 1) return { label: 'Crítica', className: 'status status--danger' };
-  if (m.budgetSlack < 10 || m.emergencyMonths < 3) return { label: 'Atenção', className: 'status status--warning' };
-  return { label: 'Saudável', className: 'status status--success' };
-}
-
-function renderPrimaryCharts(data, m) {
-  ui.budgetSlackFill.style.width = `${Math.max(0, Math.min(100, ((m.budgetSlack + 30) / 70) * 100))}%`;
-  ui.budgetSlackText.textContent = `Folga orçamentária atual: ${m.budgetSlack.toFixed(1)}%.`;
-
-  ui.liquidityFill.style.width = `${Math.max(0, Math.min(100, (m.emergencyMonths / 6) * 100))}%`;
-  ui.liquidityText.textContent = `Liquidez: ${m.emergencyMonths.toFixed(1)} meses.`;
-
-  const total = Math.max(m.totalIncome, 1);
-  const expensesPct = Math.max(0, Math.min(100, (m.essentialExpenses / total) * 100));
-  const investPct = Math.max(0, Math.min(100 - expensesPct, (data.investments / total) * 100));
-  ui.incomePie.style.background = `conic-gradient(#f29a3c 0 ${expensesPct}%, #4f7cff ${expensesPct}% ${expensesPct + investPct}%, #33b27f ${expensesPct + investPct}% 100%)`;
-}
-
-function calculateInsuranceNeeds(data) {
-  const annual = data.monthlyIncome * 12;
-  const depAdj = data.dependentsCount > 0 ? 1 + (data.dependentsIncomeProfile === 'none_work' ? 0.4 : data.dependentsIncomeProfile === 'some_work' ? 0.2 : 0.1) : 1;
-  const schoolAnnual = data.schoolCosts * 12;
+function needsByCoverage(data) {
+  const annual = (data.income + data.otherIncome) * 12;
+  const depMult = data.dependents > 0 ? 1.2 : 1;
   return {
-    absenceNeed: annual * 5 * depAdj + schoolAnnual * 5,
-    disabilityNeed: annual * 10 * depAdj + schoolAnnual * 10,
-    criticalNeed: annual * 2 * depAdj + schoolAnnual * 2
+    abs: annual * 5 * depMult,
+    dis: annual * 10 * depMult,
+    crit: annual * 2 * depMult
   };
 }
 
-function renderCoverageBar(fill, label, need, current) {
-  const gap = Math.max(0, need - current);
-  const pct = need > 0 ? Math.min(100, (current / need) * 100) : 0;
-  fill.style.width = `${pct}%`;
-  label.textContent = gap > 0 ? `${BRL.format(gap)} de diferença` : 'Cobertura adequada pela referência';
-}
+function renderInsurance(data, calc) {
+  ui.coverageWrap.classList.toggle('hidden', data.hasInsurance !== 'yes');
+  const n = needsByCoverage(data);
+  const covAbs = data.hasInsurance === 'yes' ? data.covAbs : 0;
+  const covDis = data.hasInsurance === 'yes' ? data.covDis : 0;
+  const covCrit = data.hasInsurance === 'yes' ? data.covCrit : 0;
 
-function renderInsurance(data, m) {
-  const needs = calculateInsuranceNeeds(data);
-  const hasInsurance = data.hasInsurance === 'yes';
+  const gapAbs = Math.max(0, n.abs - covAbs);
+  const gapDis = Math.max(0, n.dis - covDis);
+  const gapCrit = Math.max(0, n.crit - covCrit);
 
-  renderCoverageBar(ui.absenceBar, ui.absenceGapLabel, needs.absenceNeed, hasInsurance ? data.coverageAbsence : 0);
-  renderCoverageBar(ui.disabilityBar, ui.disabilityGapLabel, needs.disabilityNeed, hasInsurance ? data.coverageDisability : 0);
-  renderCoverageBar(ui.criticalBar, ui.criticalGapLabel, needs.criticalNeed, hasInsurance ? data.coverageCritical : 0);
-
-  if (!hasInsurance) {
-    const urgency = Math.min(100, Math.max(40, 100 - m.emergencyMonths * 12 + m.commitment * 0.4));
-    ui.protectionMessage.textContent = `Você precisa de proteção. Prioridade de contratação no curtíssimo prazo: ${urgency.toFixed(0)} / 100.`;
-    ui.protectionCard.style.borderLeftColor = '#f59e0b';
-    ui.protectionCta.classList.remove('hidden');
+  if (data.hasInsurance === 'no' || data.hasInsurance === 'dontknow') {
+    ui.insuranceText.textContent = `Sem cobertura informada. Prioridade imediata de proteção: ${Math.max(40, (100 - calc.reserveMonths * 15)).toFixed(0)}/100. Premissas: ausência 5x renda anual, invalidez 10x, doenças graves 2x.`;
   } else {
-    ui.protectionMessage.textContent = 'Sua cobertura foi avaliada por tipo. Ajuste cada cobertura para acompanhar o nível recomendado.';
-    ui.protectionCard.style.borderLeftColor = '#12b76a';
-    ui.protectionCta.classList.add('hidden');
+    ui.insuranceText.textContent = `Gap cobertura ausência: ${BRL.format(gapAbs)} | invalidez: ${BRL.format(gapDis)} | doenças graves: ${BRL.format(gapCrit)}.`;
   }
-
-  ui.insuranceNeedSummary.textContent = `Referência: ausência 5x renda anual, invalidez 10x, doenças graves 2x (ajustada por dependentes/custos escolares).`;
 }
 
-function renderEntriesList() {
+function priorities(calc, data) {
+  const list = [];
+  list.push(`Seu custo essencial consome ${calc.commitment.toFixed(1)}% da renda; acima de 60% reduz margem de segurança.`);
+  if (calc.reserveMonths < 3) list.push('Reforçar reserva de emergência para pelo menos 3 meses de custo essencial.');
+  else list.push('Manter consistência de reserva e revisar custos variáveis mensalmente.');
+  if (data.hasInsurance !== 'yes') list.push('Estruturar proteção mínima por cobertura (ausência, invalidez e doenças graves).');
+  else list.push('Comparar coberturas atuais com referências por renda e ajustar gaps críticos.');
+  return list.slice(0, 3);
+}
+
+function renderEntries() {
   if (!state.entries.length) {
-    ui.entriesList.innerHTML = '<li class="empty">Nenhuma movimentação adicionada.</li>';
+    ui.entryList.innerHTML = '<li class="small">Nenhum lançamento.</li>';
     return;
   }
 
-  ui.entriesList.innerHTML = state.entries.map((entry, i) => `
+  ui.entryList.innerHTML = state.entries.map((e, i) => `
     <li class="entry-item">
-      <div><strong>${entry.description}</strong><span class="entry-meta">${entry.category} • ${entry.type === 'income' ? 'Entrada' : 'Saída'}</span></div>
-      <div class="entry-actions"><strong class="${entry.type}">${entry.type === 'income' ? '+' : '-'} ${BRL.format(entry.amount)}</strong><button type="button" class="entry-delete" data-index="${i}">Excluir</button></div>
+      <div>
+        <strong>${e.description || 'Sem descrição'}</strong>
+        <div class="entry-meta">${e.category} • ${e.frequency === 'recurring' ? 'Recorrente' : 'Único'}</div>
+      </div>
+      <div>
+        <strong>${BRL.format(e.amount)}</strong>
+        <button class="delete" data-index="${i}" type="button">Excluir</button>
+      </div>
     </li>`).join('');
 
-  ui.entriesList.querySelectorAll('.entry-delete').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      state.entries.splice(Number(btn.dataset.index), 1);
-      render();
-    });
+  ui.entryList.querySelectorAll('.delete').forEach((b) => b.onclick = () => {
+    state.entries.splice(Number(b.dataset.index), 1);
+    renderDashboard();
   });
 }
 
-function projectionPressure(reserve, essential, income) {
-  const safe = Math.max(0, reserve / 12);
-  return Math.max(0, Math.min(100, ((essential - safe) / Math.max(1, income)) * 100));
-}
+function scenarioProjection(baseBalance, reserve, entries) {
+  const recurring = entries.filter((e) => e.frequency === 'recurring');
+  const recurringNet = recurring.reduce((acc, e) => {
+    if (e.type === 'income') return acc + e.amount;
+    if (e.type === 'essential' || e.type === 'discretionary' || e.type === 'contribution') return acc - e.amount;
+    return acc;
+  }, 0);
 
-function renderCashflowProjection(data, m) {
-  const entriesNet = state.entries.reduce((acc, e) => acc + (e.type === 'income' ? e.amount : -e.amount), 0);
-  const monthFlow = m.monthlyBalance + entriesNet;
+  const oneOff = entries.filter((e) => e.frequency === 'oneoff').reduce((acc, e) => {
+    if (e.type === 'income') return acc + e.amount;
+    return acc - e.amount;
+  }, 0);
 
-  const rows = HORIZONS.map((h) => {
-    const reserveProjected = data.emergencyReserve + monthFlow * h;
-    const pressure = projectionPressure(reserveProjected, m.essentialExpenses, m.totalIncome);
-    return { h, reserveProjected, pressure };
+  const scenarios = [
+    { name: 'Conservador', incomeAdj: 1, expenseAdj: 1.15 },
+    { name: 'Realista', incomeAdj: 1, expenseAdj: 1 },
+    { name: 'Pressionado', incomeAdj: 0.8, expenseAdj: 1.2 }
+  ];
+
+  return scenarios.map((s) => {
+    const monthFlow = baseBalance * s.incomeAdj / s.expenseAdj + recurringNet;
+    const reserve12 = reserve + monthFlow * 12 + oneOff;
+    return { ...s, monthFlow, reserve12 };
   });
-
-  ui.cashflowCards.innerHTML = rows.map((r) => `<div class="projection-card"><p>${r.h} ${r.h === 1 ? 'mês' : 'meses'}</p><strong>${BRL.format(r.reserveProjected)}</strong></div>`).join('');
-  ui.futureBar1.style.width = `${rows[0].pressure}%`;
-  ui.futureBar3.style.width = `${rows[1].pressure}%`;
-  ui.futureBar6.style.width = `${rows[2].pressure}%`;
-  ui.futureBar12.style.width = `${rows[3].pressure}%`;
-  ui.futureBar24.style.width = `${rows[4].pressure}%`;
-
-  ui.projectionNarrative.textContent = `Cálculo: reserva projetada = reserva atual + (saldo livre mensal + lançamentos) x horizonte. Pressão = relação entre despesas essenciais e capacidade financeira projetada.`;
 }
 
-function validateDependentFields(data) {
-  const hasDeps = data.dependentsCount > 0;
-  ui.schoolCostsWrapper.classList.toggle('hidden', !hasDeps);
-  fields.schoolCosts.required = hasDeps;
-  if (hasDeps && data.schoolCosts <= 0) {
-    fields.schoolCosts.setCustomValidity('Informe os custos escolares para dependentes.');
+function renderScenarios(calc, data) {
+  const scenarios = scenarioProjection(calc.balance, data.reserve, state.entries);
+  ui.scenarioGrid.innerHTML = scenarios.map((s) => `
+    <article class="scenario">
+      <h5>${s.name}</h5>
+      <p class="small">Fluxo mensal projetado: ${BRL.format(s.monthFlow)}</p>
+      <p class="small">Reserva em 12m: ${BRL.format(s.reserve12)}</p>
+    </article>
+  `).join('');
+}
+
+
+function moneyLine(label, value){return `<li><span>${label}</span><strong>${BRL.format(value)}</strong></li>`;}
+
+function renderDetailedView(data, calc){
+  const discretionaryTotal = state.entries.filter(e=>e.type==='discretionary').reduce((a,e)=>a+e.amount,0);
+  const essentialExtra = state.entries.filter(e=>e.type==='essential').reduce((a,e)=>a+e.amount,0);
+  const investExtra = state.entries.filter(e=>e.type==='contribution').reduce((a,e)=>a+e.amount,0);
+  const incomeExtra = state.entries.filter(e=>e.type==='income').reduce((a,e)=>a+e.amount,0);
+
+  const totals = [
+    {name:'Receitas', value: calc.totalIncome + incomeExtra, color:'#12b76a'},
+    {name:'Necessários', value: calc.essential + essentialExtra, color:'#0ea5e9'},
+    {name:'Supérfluos', value: discretionaryTotal, color:'#8b5cf6'},
+    {name:'Investimentos', value: data.investments + investExtra, color:'#2563eb'},
+    {name:'Seguro + Dívidas', value: data.insuranceCost + data.debts, color:'#f59e0b'}
+  ];
+
+  const max = Math.max(...totals.map(t=>t.value),1);
+  ui.summaryBars.innerHTML = totals.map(t=>`<div class="summary-row"><span>${t.name}</span><div class="summary-track"><div class="summary-fill" style="width:${(t.value/max)*100}%;background:${t.color}"></div></div><strong>${BRL.format(t.value)}</strong></div>`).join('');
+
+  ui.listIncome.innerHTML = [
+    moneyLine('Salário', data.income),
+    moneyLine('Outras receitas', data.otherIncome),
+    moneyLine('Entradas lançadas', incomeExtra)
+  ].join('');
+  ui.listEssential.innerHTML = [
+    moneyLine('Fixos', data.fixed), moneyLine('Variáveis', data.variable), moneyLine('Escolares', data.school), moneyLine('Essenciais lançadas', essentialExtra)
+  ].join('');
+  ui.listDiscretionary.innerHTML = [moneyLine('Supérfluos lançados', discretionaryTotal)].join('');
+  ui.listInvest.innerHTML = [moneyLine('Aporte base', data.investments), moneyLine('Aportes lançados', investExtra)].join('');
+  ui.listProtection.innerHTML = [moneyLine('Seguro mensal', data.insuranceCost), moneyLine('Dívidas', data.debts)].join('');
+
+  const cuts = state.entries.filter(e=>e.type==='discretionary').sort((a,b)=>b.amount-a.amount).slice(0,3);
+  if(!cuts.length){
+    ui.cutSuggestions.innerHTML = '<li>Não há gastos supérfluos lançados. Registre para receber cortes sugeridos.</li>';
   } else {
-    fields.schoolCosts.setCustomValidity('');
+    ui.cutSuggestions.innerHTML = cuts.map(c=>`<li>Revisar "${c.category}" (${BRL.format(c.amount)}). Redução de 20% já alivia o orçamento.</li>`).join('');
   }
 }
 
-function buildInsights(data, m) {
-  const insights = [
-    `Comprometimento atual de renda com despesas essenciais: ${m.commitment.toFixed(1)}%.`,
-    `Investimentos são exibidos separadamente: ${BRL.format(data.investments)} por mês.`
-  ];
-  if (data.hasInsurance === 'no') insights.push('Sem seguro ativo: prioridade em estruturar proteção mínima por cobertura.');
-  return insights;
+
+function renderEmergencyCoverage(data){
+  const reserve = data.reserve;
+  ui.emergencyExamples.innerHTML = EMERGENCY_REFERENCES.map((ref) => {
+    const covered = reserve >= ref.cost;
+    return `<li><span>${ref.item} — ${covered ? 'cobre' : 'não cobre'} com sua reserva atual</span><strong>${BRL.format(ref.cost)} <a href="${ref.url}" target="_blank" rel="noreferrer">fonte</a></strong></li>`;
+  }).join('');
 }
 
-function render() {
-  const data = getFormData();
-  validateDependentFields(data);
-  ui.coverageFields.classList.toggle('hidden', data.hasInsurance !== 'yes');
-  const form = document.getElementById('financeForm');
-  if (form && !form.checkValidity()) return;
+function renderDashboard() {
+  const data = getData();
+  const c = calculate(data);
 
-  const m = calculateMetrics(data);
-  const health = healthStatus(m);
+  ui.schoolCostsWrap.classList.toggle('hidden', data.dependents === 0);
+  if (data.dependents > 0 && data.school <= 0) {
+    ui.schoolCosts.setCustomValidity('Informe custo escolar para dependentes.');
+  } else {
+    ui.schoolCosts.setCustomValidity('');
+  }
 
-  ui.totalIncome.textContent = BRL.format(m.totalIncome);
-  ui.totalExpenses.textContent = BRL.format(m.essentialExpenses);
-  ui.investingValue.textContent = BRL.format(data.investments);
-  ui.monthlyBalance.textContent = BRL.format(m.monthlyBalance);
-  ui.emergencyMonths.textContent = m.emergencyMonths.toFixed(1);
-  ui.healthIndicator.className = health.className;
-  ui.healthIndicator.textContent = health.label;
+  ui.mBalance.textContent = BRL.format(c.balance);
+  ui.mReserveMonths.textContent = c.reserveMonths.toFixed(1);
+  ui.mCommitment.textContent = `${c.commitment.toFixed(1)}%`;
+  ui.mRuin.textContent = c.ruinRisk > 70 ? 'Alto' : c.ruinRisk > 40 ? 'Médio' : 'Baixo';
 
-  renderPrimaryCharts(data, m);
-  renderInsurance(data, m);
-  ui.insightsList.innerHTML = buildInsights(data, m).map((i) => `<li>${i}</li>`).join('');
-  renderEntriesList();
-  renderCashflowProjection(data, m);
+  ui.barSlack.style.width = `${Math.max(0, Math.min(100, ((c.balance / Math.max(data.income, 1)) * 100 + 30) * 1.2))}%`;
+  ui.barLiquidity.style.width = `${Math.max(0, Math.min(100, (c.reserveMonths / 6) * 100))}%`;
+
+  const prioritiesList = priorities(c, data);
+  ui.priorityList.innerHTML = prioritiesList.map((p) => `<li>${p}</li>`).join('');
+
+  renderInsurance(data, c);
+  renderEntries();
+  renderScenarios(c, data);
+  renderDetailedView(data, c);
+  renderEmergencyCoverage(data);
 }
 
-function addEntry() {
-  const amount = parseMoney(fields.entryAmount);
-  const description = fields.entryDescription.value.trim();
-  if (!description || amount <= 0) return alert('Preencha descrição e valor válido.');
-  state.entries.unshift({
-    type: fields.entryType.value,
-    category: fields.entryCategory.value,
-    description,
-    amount
-  });
-  setMoneyValue(fields.entryAmount, 0);
-  fields.entryDescription.value = '';
-  render();
-}
-
-function setupTabs() {
-  ui.tabButtons.forEach((b) => b.addEventListener('click', () => {
-    ui.tabButtons.forEach((btn) => btn.classList.remove('active'));
-    b.classList.add('active');
-    ui.tabPanels.forEach((p) => p.classList.toggle('active', p.id === b.dataset.tab));
-  }));
-}
-
-function profileFromOnboarding() {
-  let score = 0;
-  score += ui.qControl.value === 'high' ? 2 : ui.qControl.value === 'mid' ? 1 : 0;
-  score += ui.qBudget.value === 'high' ? 2 : ui.qBudget.value === 'mid' ? 1 : 0;
-  if (score <= 1) return 'Iniciante';
-  if (score <= 3) return 'Moderado';
-  return 'Avançado';
-}
-
-function applyOnboarding() {
+function seedFromOnboarding() {
   const deps = Number(ui.qDependents.value) || 0;
-  const school = parseMoney(ui.qSchoolCosts);
-  if (deps > 0 && school <= 0) return alert('Para dependentes, informe custos escolares.'), false;
+  const school = parseMoney(ui.qSchool);
+  if (deps > 0 && school <= 0) return alert('Se houver dependentes, informe custos escolares.'), false;
 
-  setMoneyValue(fields.monthlyIncome, parseMoney(ui.qIncome));
-  setMoneyValue(fields.fixedCosts, parseMoney(ui.qFixedCosts));
-  fields.dependentsCount.value = deps;
-  setMoneyValue(fields.schoolCosts, school);
-  ui.profileResult.textContent = `Perfil identificado: ${profileFromOnboarding()}.`;
+  setMoney(ui.monthlyIncome, parseMoney(ui.qIncome));
+  setMoney(ui.fixedCosts, parseMoney(ui.qFixed));
+  setMoney(ui.otherIncome, 0);
+  setMoney(ui.variableCosts, parseMoney(ui.qVariable));
+  setMoney(ui.emergencyReserve, parseMoney(ui.qReserve));
+  ui.dependentsCount.value = deps;
+  setMoney(ui.schoolCosts, school);
+  ui.hasInsurance.value = ui.qHasInsurance.value;
+
+  const maturityMap = { never: 'Iniciante', sometimes: 'Moderado', often: 'Avançado', dontknow: 'Em diagnóstico' };
+  ui.profileResult.textContent = `Perfil identificado: ${maturityMap[ui.qTrack.value]}.`;
+  ui.onboardingSummary.textContent = `Com base no que você respondeu, sua situação hoje é: ${maturityMap[ui.qTrack.value]} em maturidade financeira.`;
   return true;
+}
+
+function initOnboarding() {
+  updateFollowup();
+  ui.qTrack.addEventListener('change', updateFollowup);
+  ui.qDependents.addEventListener('input', () => ui.qSchoolWrap.classList.toggle('hidden', (Number(ui.qDependents.value) || 0) === 0));
+  ui.prevStep.onclick = () => goToStep(state.step - 1);
+  ui.nextStep.onclick = () => goToStep(state.step + 1);
+  ui.finishOnboarding.onclick = () => {
+    if (!seedFromOnboarding()) return;
+    state.onboarded = true;
+    ui.onboarding.classList.add('hidden');
+    ui.panel.classList.remove('hidden');
+    renderDashboard();
+  };
+}
+
+function initPanel() {
+  [ui.monthlyIncome, ui.otherIncome, ui.fixedCosts, ui.variableCosts, ui.debts, ui.insuranceCost, ui.investments, ui.emergencyReserve, ui.schoolCosts, ui.coverageAbsence, ui.coverageDisability, ui.coverageCritical, ui.entryAmount].forEach((i) => i.addEventListener('input', () => state.onboarded && renderDashboard()));
+  [ui.dependentsCount, ui.hasInsurance].forEach((i) => i.addEventListener('change', () => state.onboarded && renderDashboard()));
+
+  ui.toggleMethodology.onclick = () => ui.methodology.classList.toggle('hidden');
+
+  ui.entryType.addEventListener('change', () => {
+    ui.entryCategory.innerHTML = ENTRY_CATEGORIES[ui.entryType.value].map((c) => `<option>${c}</option>`).join('');
+  });
+  ui.entryCategory.innerHTML = ENTRY_CATEGORIES[ui.entryType.value].map((c) => `<option>${c}</option>`).join('');
+
+  ui.addEntry.onclick = () => {
+    const amount = parseMoney(ui.entryAmount);
+    if (amount <= 0) return alert('Informe valor do lançamento.');
+    state.entries.unshift({
+      type: ui.entryType.value,
+      category: ui.entryCategory.value,
+      description: ui.entryDescription.value.trim(),
+      frequency: ui.entryFrequency.value,
+      amount
+    });
+    setMoney(ui.entryAmount, 0);
+    ui.entryDescription.value = '';
+    renderDashboard();
+  };
+
+  ui.resetEntries.onclick = () => { state.entries = []; renderDashboard(); };
 }
 
 async function init() {
   await fetch('/api/config');
-
-  Object.entries(defaultData).forEach(([k, v]) => {
-    if (!fields[k]) return;
-    if (typeof v === 'number' && fields[k].classList.contains('money-input')) setMoneyValue(fields[k], v);
-    else fields[k].value = v;
-  });
-  setMoneyValue(ui.qIncome, defaultData.monthlyIncome);
-  setMoneyValue(ui.qFixedCosts, defaultData.fixedCosts);
-  setMoneyValue(ui.qSchoolCosts, 0);
-
   bindMoneyMasks();
-  populateEntryCategories();
+  setMoney(ui.qIncome, 0); setMoney(ui.qFixed, 0); setMoney(ui.qVariable, 0); setMoney(ui.qSchool, 0); setMoney(ui.qReserve, 0);
+  setMoney(ui.monthlyIncome, 0); setMoney(ui.otherIncome, 0); setMoney(ui.fixedCosts, 0); setMoney(ui.variableCosts, 0); setMoney(ui.debts, 0); setMoney(ui.insuranceCost, 0); setMoney(ui.investments, 0); setMoney(ui.emergencyReserve, 0); setMoney(ui.schoolCosts, 0);
+  setMoney(ui.coverageAbsence, 0); setMoney(ui.coverageDisability, 0); setMoney(ui.coverageCritical, 0); setMoney(ui.entryAmount, 0);
 
-  ui.loadingState.classList.add('hidden');
-  ui.onboardingCard.classList.remove('hidden');
-
-  ui.qDependents.addEventListener('input', () => ui.qSchoolCostsWrapper.classList.toggle('hidden', (Number(ui.qDependents.value) || 0) === 0));
-  ui.startExperienceBtn.addEventListener('click', () => {
-    if (!applyOnboarding()) return;
-    ui.onboardingCard.classList.add('hidden');
-    ui.appContent.classList.remove('hidden');
-    setupTabs();
-    render();
-  });
-
-  fields.entryType.addEventListener('change', populateEntryCategories);
-  [fields.dependentsCount, fields.dependentsIncomeProfile, fields.hasInsurance].forEach((f) => {
-    f.addEventListener('input', render);
-    f.addEventListener('change', render);
-  });
-
-  ui.addEntryBtn.addEventListener('click', addEntry);
-  ui.resetEntriesBtn.addEventListener('click', () => { state.entries = []; render(); });
-  ui.protectionCta.addEventListener('click', () => window.open('https://wa.me/5511995488859', '_blank'));
+  ui.loading.classList.add('hidden');
+  ui.onboarding.classList.remove('hidden');
+  initOnboarding();
+  initPanel();
 }
 
 init();
