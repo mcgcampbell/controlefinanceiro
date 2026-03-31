@@ -31,3 +31,9 @@ label{display:grid;gap:6px;font-weight:600;color:#475467}input,select{padding:11
 .has-tip{position:relative}
 .tip{display:none;position:absolute;left:8px;right:8px;bottom:8px;background:#111827;color:#fff;padding:8px;border-radius:8px;font-size:.78rem;z-index:3}
 .has-tip:hover .tip{display:block}
+
+
+.footer-contact{position:sticky;bottom:0;background:rgba(255,255,255,.95);backdrop-filter:blur(6px);border-top:1px solid #eaecf0;padding:10px 0;z-index:30}
+.footer-contact__content{display:flex;justify-content:center;gap:14px}
+.icon-btn{width:46px;height:46px;border-radius:999px;border:1px solid #d0d5dd;background:#fff;display:flex;align-items:center;justify-content:center}
+.icon-btn svg{width:24px;height:24px;fill:#000}
